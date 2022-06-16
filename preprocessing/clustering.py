@@ -1,10 +1,4 @@
-import matplotlib
-matplotlib.use('Agg') 
-
-from turtle import pos
 import pandas as pd
-
-import matplotlib.pyplot as plt
 from scipy.spatial import distance_matrix
 import numpy as np
 from scipy.stats import zscore
@@ -14,8 +8,6 @@ from geopy.distance import geodesic
 from datetime import datetime
 import math
 from datetime import timedelta
-
-
 
 
 def clustering_algo(path, stations):
