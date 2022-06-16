@@ -1,0 +1,98 @@
+/* CSS styles */
+
+
+/* HTML Body */
+
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    font-family: Sans-Serif;
+}
+
+
+/* App container */
+
+.app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.main {
+    flex: 1 1 auto;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 100%;
+    flex: 1;
+    align-items: center;
+}
+
+
+/* Sidebar */
+
+.sidebar-controls {
+    flex: 1 0 25%;
+    height: 100%;
+    background-color: #004e96;
+    padding: 1%;
+}
+
+.main-content {
+    height: 100%;
+}
+
+
+/* Tabs and Navs */
+
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
+    color: #fff;
+    background-color: #fd1207;
+}
+
+#tabs {
+    padding: 2%
+}
+
+.map-div {
+    flex: 1 0 75%;
+}
+
+#plan-trip-btn {
+    float: right;
+    padding: 2%;
+    width: 100%;
+}
+
+
+/* Links */
+
+a {
+    color: #ffffff;
+    text-decoration: none;
+    background-color: transparent;
+    -webkit-text-decoration-skip: objects;
+}
+
+a:hover {
+    color: #000000;
+    text-decoration: none;
+}

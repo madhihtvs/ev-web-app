@@ -1,0 +1,95 @@
+<div class="tab-content" id="pills-tabContent">
+  <!-- Start of Search Tab-->
+  <div
+    class="tab-pane fade show active"
+    id="search-trip"
+    role="tabpanel"
+    aria-labelledby="search-trip-tab"
+  >
+    <div class="input-group rounded">
+      <input
+        type="search"
+        class="form-control rounded"
+        placeholder="Search"
+        aria-label="Search"
+        aria-describedby="search-addon"
+      />
+      <input type="submit" />
+    </div>
+  </div>
+  <!-- End of Search Tab-->
+
+  <!-- Plan Trip Tab-->
+  <div
+    class="tab-pane fade"
+    id="plan-trip"
+    role="tabpanel"
+    aria-labelledby="plan-trip-tab"
+  >
+    <form method="POST" autocomplete="off">
+      <input
+        id="start-point"
+        name="start-point"
+        type="search"
+        class="form-control rounded"
+        placeholder="Add Starting Point"
+        aria-label="Search"
+        aria-describedby="search-addon"
+      />
+      <br />
+      <input
+        id="end-point"
+        name="end-point"
+        type="search"
+        class="form-control rounded"
+        placeholder="Add Destination"
+        aria-label="Search"
+        aria-describedby="search-addon"
+      />
+      <br />
+
+      <input
+        id="range-start"
+        name="range-start"
+        type="number"
+        class="form-control rounded"
+        placeholder="Range Start"
+        aria-label="range-start"
+        aria-describedby="range-start-addon"
+      />
+      <br />
+      <input
+        id="range-arrival"
+        name="range-arrival"
+        type="number"
+        class="form-control rounded"
+        placeholder="Range Arrival"
+        aria-label="range-arrival"
+        aria-describedby="range-arrival-addon"
+      />
+      <br />
+
+      <input
+        id="start-time"
+        name="start-time"
+        type="time"
+        class="form-control rounded"
+        placeholder="Choose Start Time"
+        aria-label="start-time"
+        aria-describedby="start-time-addon"
+      />
+      <br />
+      <input id="plan-trip-btn" type="submit" value="Find Best Route" />
+    </form>
+  </div>
+  <!-- End of Plan Trip Tab-->
+
+  <div
+    class="tab-pane fade"
+    id="more-options-section"
+    role="tabpanel"
+    aria-labelledby="more-options-section-tab"
+  >
+    Tab 3
+  </div>
+</div>
