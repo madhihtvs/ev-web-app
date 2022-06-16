@@ -6,6 +6,7 @@ Werkzeug==2.0.0
 SQLAlchemy
 matplotlib
 Flask_SQLAlchemy==2.5.1
-Flask
+Flask==2.1.0
 jinja2
 gunicorn
+requests
