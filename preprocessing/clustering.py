@@ -1,5 +1,7 @@
 from turtle import pos
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 from scipy.spatial import distance_matrix
 import numpy as np
