@@ -1,11 +1,12 @@
 from typing import Dict, List, Tuple
 
 import pandas as pd
+import copy
+
 
 import preprocessing.backend as backend
 import preprocessing.battery as battery
 import preprocessing.clustering as clustering
-
 
 def collect_user_inputs(request_values):
     start_point = request_values.get("start-point")
@@ -15,6 +16,18 @@ def collect_user_inputs(request_values):
     start_time = request_values.get("start-time")
     start_time = f"{start_time}:00"
     return start_point, end_point, range_start, range_arrival, start_time
+
+def search_input(request_values):
+    search_point = request_values.get("search-point")
+    return search_point
+
+def get_nearest_charging_stations(
+    search_point: List[Tuple[float, float]], bng_dat_path: str = "./resources/bng_df.csv"
+    ) -> pd.DataFrame: 
+
+    stations = pd.read_csv(bng_dat_path)
+    nearest_df = clustering.nearest_charging_stations(search_point, stations)
+    return nearest_df
 
 
 def get_lat_long_from_coordinates(
@@ -57,8 +70,9 @@ def get_clustering_data(
     path = pd.DataFrame(point_list, columns=["lat", "lng"])
 
     stations = pd.read_csv(bng_dat_path)
-    _, df = clustering.clustering_algo(path, stations)
+    df = clustering.clustering_algo(path, stations)
     return df
+
 
 
 def process_inputs(
@@ -114,15 +128,30 @@ def process_inputs(
         total_time,
     )
 
-    for i in lst.keys():
-        id = "stop" + str(i)
-        markers += "var {idd} = L.marker([{latitude}, {longitude}]);\
-                                    {idd}.addTo(map);".format(
-            idd=id,
-            latitude=float(lst[i][0]),
-            longitude=float(lst[i][1]),
-        )
-    return (
+    if type(lst) == str:
+        point_list, distance, time = backend.get_route(origin_lat, origin_lon, destination_lat, destination_lon)
+        lst = [lst]
+        idx_lst = [0]
+        lst = dict(zip(idx_lst, lst))
+                
+        lst_coord = []
+        lst2 = lst_coord
+        marker_lst = []
+        lst2.insert(0, [origin_lat, origin_lon])
+        lst2.append([destination_lat, destination_lon])
+        idx = [i for i in range(len(lst2))]
+        res = {idx[i]: lst2[i] for i in range(len(idx))}
+        last_leg = {0: [initial_soc, distance, initial_soc - (distance/ (range_ev/100))]}
+
+
+        marker_lst.append("L.marker([{latitude}, {longitude}])".format(latitude=origin_lat,\
+                                                                                        longitude=origin_lon,
+                                                                                                ))
+        marker_lst.append("L.marker([{latitude}, {longitude}])".format(latitude=destination_lat,\
+                                                                                        longitude=destination_lon,
+                                                                                                ))
+        return (
+        marker_lst,
         markers,
         mid_lat,
         mid_lon,
@@ -133,4 +162,89 @@ def process_inputs(
         final_threshold,
         start_time,
         lst,
-    )
+        res,
+        last_leg)
+
+    else:
+        keys = list(lst.keys())
+        if len(keys) > 1:
+            last_leg = [lst[keys[-2]]]
+            idx_lst = [0]
+            last_leg = dict(zip(idx_lst, last_leg))
+
+            lst3 = copy.deepcopy(lst)
+
+            del lst[keys[-1]]
+            keys = keys[:-1]
+            del lst[keys[-1]]
+            marker_lst = []
+            lst_coord = []
+
+            for i in lst.keys():
+                id = "stop" + str(i)
+                markers += "var {idd} = L.marker([{latitude}, {longitude}]);\
+                                                {idd}.addTo(map);".format(idd=id, latitude=float(lst[i][2]),\
+                                                                                        longitude=float(lst[i][3]),
+                                                                                                )
+
+                marker_lst.append("L.marker([{latitude}, {longitude}])".format(latitude=float(lst[i][2]),\
+                                                                                        longitude=float(lst[i][3]),
+                                                                                                )
+                                )
+                lst_coord.append([lst[i][2],lst[i][3]])
+            
+            lst2 = lst_coord
+            lst2.insert(0, [origin_lat, origin_lon])
+            lst2.append([destination_lat, destination_lon])
+            idx = [i for i in range(len(lst2))]
+            res = {idx[i]: lst2[i] for i in range(len(idx))}
+            point_list, distance, time = backend.get_route_many(lst2)
+           
+            return (
+                marker_lst,
+                markers,
+                mid_lat,
+                mid_lon,
+                point_list,
+                distance,
+                time,
+                initial_soc,
+                final_threshold,
+                start_time,
+                lst,
+                res,
+                last_leg)
+
+        else:
+            last_leg = [lst[keys[-1]]]
+            idx_lst = [0]
+            last_leg = dict(zip(idx_lst, last_leg))
+            lst_coord = []
+            lst2 = lst_coord
+            marker_lst = []
+            lst2.insert(0, [origin_lat, origin_lon])
+            lst2.append([destination_lat, destination_lon])
+            idx = [i for i in range(len(lst2))]
+            res = {idx[i]: lst2[i] for i in range(len(idx))}
+            point_list, distance, time = backend.get_route_many(lst2)
+            marker_lst.append("L.marker([{latitude}, {longitude}])".format(latitude=origin_lat,\
+                                                                                        longitude=origin_lon,
+                                                                                                ))
+            marker_lst.append("L.marker([{latitude}, {longitude}])".format(latitude=destination_lat,\
+                                                                                        longitude=destination_lon,
+                                                                                                ))  
+
+            return (
+                marker_lst,
+                markers,
+                mid_lat,
+                mid_lon,
+                point_list,
+                distance,
+                time,
+                initial_soc,
+                final_threshold,
+                start_time,
+                lst,
+                res,
+                last_leg)      
