@@ -1,6 +1,6 @@
 // Create a map object.
 var myMap = L.map("map", {
-    center: [39.74, -104.99],
+    center: [12.9716, 77.5946],
     zoom: 10
 });
 
@@ -10,6 +10,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(myMap);
 
 // Define a set of city markers
+
 var littleton = L.marker([39.61, -105.02]).bindPopup('This is Littleton, CO.');
 var denver = L.marker([39.74, -104.99]).bindPopup('This is Denver, CO.');
 var aurora = L.marker([39.73, -104.8]).bindPopup('This is Aurora, CO.');
