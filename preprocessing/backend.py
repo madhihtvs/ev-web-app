@@ -51,6 +51,7 @@ def get_route_many(*points):
     for i in points[0]:
         lat = i[0]
         lng = i[1]
+
         string += f"{lat},{lng}|"
     string = string[:-1]
     url = "https://api.geoapify.com/v1/routing"
@@ -61,7 +62,9 @@ def get_route_many(*points):
     }
     response = requests.request("GET", url, params=querystring)
     data = response.json()
-    linestring = data["features"][0]["geometry"]["coordinates"][0]
+    linestring = []
+    for i in range(len(points[0])-1):
+        linestring.extend(data["features"][0]["geometry"]["coordinates"][i])
     df = pd.DataFrame(linestring)
     df.columns = ["lon", "lat"]
     df = df.reindex(["lat", "lon"], axis=1)
