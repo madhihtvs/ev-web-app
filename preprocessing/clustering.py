@@ -2,18 +2,14 @@ import pandas as pd
 from scipy.spatial import distance_matrix
 import numpy as np
 from scipy.stats import zscore
-import plotly.express as px
 from operator import itemgetter
 from geopy.distance import geodesic
-from datetime import datetime
-import math
-from datetime import timedelta
+from sklearn.neighbors import BallTree
 
 
 def clustering_algo(path, stations):
     if "lat" or "lng" in stations.columns:
         stations.rename(columns = {'lat':'Latitude', 'lng':'Longitude'}, inplace = True)
-        
     
     if "Location" in stations.columns:
         stations.rename(columns = {'Location':'Station Name'}, inplace = True)
@@ -32,7 +28,7 @@ def clustering_algo(path, stations):
 
     disntace_matrix = distance_matrix(path, stations_pos)
 
-    # for each point in the path, we take the 5 closest recharging stations (wihtout counting the duplciates)
+    # for each point in the path, we take the 5 closest recharging stations (without counting the duplciates)
     closest = np.argsort(disntace_matrix, -1)[:, :5]
     closest = np.unique(closest.ravel())
     closest_points = stations_pos[closest]
@@ -54,25 +50,24 @@ def clustering_algo(path, stations):
     df22 = route_df[route_df['route'] == '0']
     dff = route_df[route_df['route'] == '1']
 
-    fig = px.scatter_mapbox(route_df,lat="Latitude",lon="Longitude",mapbox_style="carto-positron", zoom = 10, color = "route")
-
-    
+    df22["lat_lon"] = list(zip(df22.Latitude, df22.Longitude))
 
     mega = []
-    for index, row in dff.iterrows():
-        lst = []
-        for idx,row2 in df22.iterrows():
-            station = row2['Station Name']
-            lat1 = row['Latitude']
-            lng1 = row['Longitude']
-            
-            lat2 = row2['Latitude']
-            lng2 = row2['Longitude']
-            dist = geodesic((lat1,lng1), (lat2,lng2)).km
-            lst.append([station,lat2,lng2,dist])
-        val = sorted(lst, key= itemgetter(3))[0]
-        mega.append(val)
-    
+    path_df = path_df[["Latitude", "Longitude"]]
+    closest_df2 = closest_df[["Latitude", "Longitude"]]
+    path2 = path_df.to_numpy()
+    closest2 = closest_df2.to_numpy()
+    disntace_matrix2 = distance_matrix(path2, closest2)
+
+
+    for i in range(len(disntace_matrix2)):
+        a = list(disntace_matrix2[i])
+        minimum = min(a)
+        idx = a.index(minimum)
+        closest = closest_df.loc[idx]
+        mega.append([closest["Station Name"],closest["Latitude"], closest["Longitude"], minimum])
+
+
     dist = [0.000000]
     i = 0
     while i <= len(dff) - 2:
@@ -119,5 +114,30 @@ def clustering_algo(path, stations):
 
 
 
-    return fig, dff
+    return dff
 
+
+
+
+def nearest_charging_stations(pt, stations):
+        if "lat" or "lng" in stations.columns:
+                stations.rename(columns = {'lat':'Latitude', 'lng':'Longitude'}, inplace = True)
+        
+        if "Location" in stations.columns:
+                stations.rename(columns = {'Location':'Station Name'}, inplace = True)
+
+        stations["Station Name"] = stations["Station Name"].str.replace(',','')
+        stations.drop(columns=['Sl No'])
+        stations_pos = stations[['Latitude', 'Longitude']].to_numpy()
+        tree = BallTree(stations_pos, metric = "euclidean")
+        ind = tree.query_radius(pt, r=0.01)
+        df_nearest = pd.DataFrame()  
+        for i in ind[0]:
+                a = stations.loc[stations.index == i]
+                df_nearest = pd.concat([df_nearest,a])
+        df_nearest = df_nearest.drop(columns=['Sl No'])
+        df_nearest = df_nearest.reset_index(drop=True)
+        df_nearest["Label"] = "Nearest Point"
+        lst = ["Query Point", pt[0][1], pt[0][0], "Query Point"]
+        df_nearest.loc[len(df_nearest)] = lst
+        return df_nearest
