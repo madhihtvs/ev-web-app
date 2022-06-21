@@ -103,8 +103,9 @@ ave_speed, trip_start_at, trip_start, total_time):
                     
                     print("Updated Charge:",b, "%")
                     print("*************")
-                    yield [a[2], a[3]]
-                    
+
+                    yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b ]
+
                     if len(str(leg_end)) < 8:
                         if "02:00:00" <= "0" + str(leg_end) <= "06:00:00":
                             night_travel = True
@@ -128,6 +129,9 @@ ave_speed, trip_start_at, trip_start, total_time):
                     print("Leg End:",str(leg_end))
                     
                     print("Current SoC:", b - soc_reduction, "%")
+
+                    yield [b, dist_left, b-soc_reduction]
+
                     dist_left = dist_left - dist_left
                     print("Trip Duration:",total_time/3600, "hrs")
                     sec = get_sec(trip_start_at) + total_time
@@ -135,8 +139,9 @@ ave_speed, trip_start_at, trip_start, total_time):
                     print("Trip End:",td )
                     print("Reached Destination:", dist_left, "km left")
                      
-                    return sec, night_travel, td, b - soc_reduction
-
+                    yield [sec, night_travel, b - soc_reduction]
+                    break
+                    
                 else:
                     print("No More Stops, Final Lap")
                     print("Starting SoC:", new_soc, "%")
@@ -144,6 +149,9 @@ ave_speed, trip_start_at, trip_start, total_time):
                     print("Travelling", dist_travelled, "km now")
                     
                     print("Current SoC:", new_soc - soc_reduction, "%")
+
+                    yield [dist_left, new_soc - soc_reduction]
+
                     dist_left = dist_left - dist_left
                     print("Trip Duration:",total_time/3600, "hrs")
                     sec = get_sec(trip_start) + total_time
@@ -173,7 +181,7 @@ ave_speed, trip_start_at, trip_start, total_time):
         print("Updated Charge:",new_soc, "%")
         print("*************")
 
-        yield [a[2],a[3]]
+        yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],new_soc ]
 
         if len(str(leg_end)) < 8:
             if "02:00:00" <= "0" + str(leg_end) <= "06:00:00":
@@ -201,11 +209,16 @@ ave_speed, trip_start_at, trip_start, total_time):
 
 def station_coordinates(df, initial_soc, min_threshold, total_distance, 
     dist_travelled, range_ev, stop, final_threshold, range_needed, ave_speed, trip_start_at, trip_start, total_time):
+
+    possible_range = (initial_soc - min_threshold)/100 * range_ev
     lst = {}
-    stop = 1
-    for value in charge_and_go(df, initial_soc, min_threshold, total_distance, 
-    dist_travelled, range_ev, stop, final_threshold, range_needed, ave_speed, trip_start_at, trip_start, total_time): 
-        lst[stop] = value
-        stop += 1
+    if possible_range >= total_distance:
+        lst = "Route from Origin to Destination with No Charging" 
+    else:
+        stop = 1
+        for value in charge_and_go(df, initial_soc, min_threshold, total_distance, 
+        dist_travelled, range_ev, stop, final_threshold, range_needed, ave_speed, trip_start_at, trip_start, total_time): 
+            lst[stop] = value
+            stop += 1
 
     return lst
