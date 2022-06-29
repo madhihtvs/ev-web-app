@@ -12,6 +12,37 @@ def get_coordinates(location):
 
     return data
 
+def get_POI(lat, lon):
+    url = "https://api.geoapify.com/v2/places"
+    params = dict(
+        categories='entertainment,catering,commercial,leisure,tourism',
+        filter=f'circle:{lon},{lat},5000',
+        bias=f'proximity:{lon},{lat}',
+        limit=20,
+        apiKey='af361475cd624479ab85363a1893eab1'
+    )
+
+    resp = requests.get(url=url, params=params)
+    data = resp.json()
+    features = data["features"]
+
+    POI = []
+    for i in range(len(features)):
+        try:
+            name = features[i]["properties"]["name"]
+        except:
+            name = features[i]["properties"]["street"]
+        category = features[i]["properties"]["categories"][0]
+        lat = features[i]["geometry"]["coordinates"][::-1][0]
+        lon = features[i]["geometry"]["coordinates"][::-1][1]
+        POI.append([name, category, lat, lon])
+
+    df = pd.DataFrame(POI, columns = ["Name","Category","Latitude", "Longitude"])
+    return df
+
+
+
+
 
 def get_route(orig_lat, orig_lon, dest_lat, dest_lon):
     url = "https://api.geoapify.com/v1/routing"
@@ -46,6 +77,7 @@ def get_route_geojson(orig_lat, orig_lon, dest_lat, dest_lon):
     return data
 
 
+
 def get_route_many(*points):
     string = ""
     for i in points[0]:
@@ -56,6 +88,7 @@ def get_route_many(*points):
     string = string[:-1]
     url = "https://api.geoapify.com/v1/routing"
     querystring = {
+        
         "waypoints": string,
         "mode": "motorcycle",
         "apiKey": "af361475cd624479ab85363a1893eab1",
