@@ -679,10 +679,6 @@ def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, ran
                 print("Reached Destination:", dist_left, "km left")
                 break
 
-def charge_with_entertainment():
-    pass 
-
-
 def station_coordinates(df, initial_soc, min_threshold, total_distance, 
     dist_travelled, range_ev, stop, final_threshold, range_needed, ave_speed, trip_start_at, trip_start, total_time):
 
