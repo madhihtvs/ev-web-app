@@ -1,5 +1,5 @@
 import pandas as pd
-from scipy.spatial import distance_matrix
+from scipy.spatial import distance_matrix, KDTree
 import numpy as np
 from scipy.stats import zscore
 from operator import itemgetter
@@ -8,18 +8,18 @@ from sklearn.neighbors import BallTree
 
 
 def clustering_algo(path, stations):
-    if "lat" or "lng" in stations.columns:
-        stations.rename(columns = {'lat':'Latitude', 'lng':'Longitude'}, inplace = True)
+    # if "lat" or "lng" in stations.columns:
+    #     stations.rename(columns = {'lat':'Latitude', 'lng':'Longitude'}, inplace = True)
     
-    if "Location" in stations.columns:
-        stations.rename(columns = {'Location':'Station Name'}, inplace = True)
-
+    # if "Location" in stations.columns:
+    #     stations.rename(columns = {'Location':'Station Name'}, inplace = True)
 
     
-    stations["Station Name"] = stations["Station Name"].str.replace(',','')
-    stations.drop(columns=['Sl No'])
+    # stations["Station Name"] = stations["Station Name"].str.replace(',','')
+    # stations.drop(columns=['Sl No'])
     stations_pos = stations[['Latitude', 'Longitude']].to_numpy()
     path = path[["lat","lng"]]
+    path = path.iloc[::15, :]
     path = path.to_numpy()
 
     zs = np.abs(zscore(stations_pos, 0))
@@ -141,3 +141,73 @@ def nearest_charging_stations(pt, stations):
         lst = ["Query Point", pt[0][1], pt[0][0], "Query Point"]
         df_nearest.loc[len(df_nearest)] = lst
         return df_nearest
+
+
+def near_points(pt, stations):
+        stations2 = stations
+
+        if "lat" or "lng" in stations2.columns:
+                stations2.rename(columns = {'lat':'Latitude', 'lng':'Longitude'}, inplace = True)
+        
+        if "Location" in stations2.columns:
+                stations2.rename(columns = {'Location':'Station Name'}, inplace = True)
+
+        stations2["Station Name"] = stations2["Station Name"].str.replace(',','')
+        stations_pos2 = stations2[['Latitude', 'Longitude']].to_numpy()
+
+        path = pt
+
+        zs = np.abs(zscore(stations_pos2, 0))
+        filtered_entries = (zs < 3).all(axis=1)
+        stations_pos = stations_pos2[filtered_entries]
+
+        disntace_matrix = distance_matrix(path, stations_pos)
+
+        closest = np.argsort(disntace_matrix, -1)[:, :5]
+        closest = np.unique(closest.ravel())
+        closest_points = stations_pos[closest]
+
+        closest_df = pd.DataFrame(closest_points, columns=['Latitude', 'Longitude']) 
+
+        closest_df = pd.merge(stations, closest_df, how='inner')
+        closest_df["Label"] = "Closest"
+        closest_df = closest_df.iloc[:,1:]
+
+        return closest_df
+
+
+    
+def dimension_reduction(path, origin_lat, origin_lon, dest_lat, dest_lon, stations):
+
+    stations2 = stations
+
+    if "lat" or "lng" in stations2.columns:
+        stations2.rename(columns = {'lat':'Latitude', 'lng':'Longitude'}, inplace = True)
+    
+    if "Location" in stations.columns:
+        stations2.rename(columns = {'Location':'Station Name'}, inplace = True)
+
+    
+    stations2["Station Name"] = stations2["Station Name"].str.replace(',','')
+    stations2.drop(columns=['Sl No'])
+
+    orgdest = [[origin_lat, origin_lon],[dest_lat,dest_lon]]
+    route_df = path.iloc[::15, :]
+    route_array = route_df.to_numpy()
+    stations2 = stations2[['Latitude', 'Longitude']].to_numpy()
+    kdB = KDTree(stations2)
+    ind = kdB.query(route_array, k=20)[-1]
+
+    lst = []
+
+    for i in range(len(ind)):
+        for j in ind[i]:
+            lst.append(stations2[j])
+    
+    closest_df = pd.DataFrame(lst, columns=['Latitude', 'Longitude']) 
+    closest_df = pd.merge(stations, closest_df, how='inner')
+
+    return closest_df
+
+
+    
