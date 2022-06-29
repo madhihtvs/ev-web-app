@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="../static/css/results.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
+    <link rel="stylesheet" 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" i
+    ntegrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+    crossorigin="anonymous"/>
+    
+    <script
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin=""
+    ></script>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <div id = "container" class="card level-3">
+        <h5>Trip Details</h5>
+        
+    </div>
+
+    <div id ="container2"></div>
+
+      
+    
+    
+    
+
+    <script>
+
+          var container = document.getElementById("container2");
+          var message = "Where would you like to rest? We will find the nearest charging station accordingly."
+          container.appendChild(document.createTextNode(message));
+          container.appendChild(document.createElement("br"));
+          
+          var form = document.createElement("form");
+          form.setAttribute("method", "post");
+          form.setAttribute("action", "/ownrest");
+
+          var user = document.createElement("input");
+          user.setAttribute("type", "text");
+          user.setAttribute("name", "rest");
+          user.setAttribute("id", "rest");
+
+          var s = document.createElement("input");
+          s.setAttribute("type", "submit");
+          s.setAttribute("value", "Submit");
+
+          form.append(user);
+          form.append(s);
+
+          container.appendChild(form);
+
+
+
+
+
+      
+    </script>
+  </body>
+</html>

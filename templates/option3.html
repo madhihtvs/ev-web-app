@@ -1,0 +1,176 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="../static/css/results.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
+    <link rel="stylesheet" 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" i
+    ntegrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+    crossorigin="anonymous"/>
+    
+    <script
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin=""
+    ></script>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <div id = "container" class="card level-3">
+        <h5>Trip Details</h5>
+    </div>
+    <div id="map"></div>
+      
+  
+
+    <script>
+
+      var boolValue = JSON.parse({{night_travel|tojson}});
+
+      var map = L.map('map').setView([{{lat}}, {{lon}}], 12);
+      var pointList1 = {{ pointList|tojson }};
+      var pointList2 = JSON.parse(pointList1);
+      console.log(pointList2);
+      L.polyline(pointList2).addTo(map);
+      console.log({{distance}});
+      console.log({{time}});
+      console.log({{initial_soc}});
+      console.log({{final_threshold}});
+      console.log({{trip_start_at|tojson}});
+
+      let markers2 = {{marker_lst|tojson}};
+      var markers3 = JSON.parse(markers2);
+      var markers4 = markers3.toString();
+      var markers5 = markers4.split(",");
+
+      let arr = [];
+
+      var lst2 = {{ lst|tojson }};
+      var lst3 = JSON.parse(lst2);
+      var lst4 = Object.values(lst3);
+      
+      console.log(lst4);
+
+      var details2 = {{ details|tojson }};
+      var details3 = JSON.parse(details2);
+      var details4 = Object.values(details3);
+      console.log(details4);
+
+      let details = [];
+
+      var total_time = {{time}};
+      var chargetotal = total_time;
+
+      var last_leg2 = {{ last_leg|tojson }};
+      var last_leg3 = JSON.parse(last_leg2);
+      var last_leg4 = Object.values(last_leg3);
+      console.log(last_leg4);
+
+
+      if (details4.length > 0 && typeof details4[0]  != 'string')  {
+
+          for (let i = 0; i < details4.length; i++) {
+          details.push([details4[i][0], details4[i][1],details4[i][2],details4[i][3],details4[i][4],details4[i][5],details4[i][6]]);
+          
+          var element = document.createElement("p");
+          var intial = document.createTextNode('Start SoC: ' + details4[i][0] + '%, ');
+          element.appendChild(intial);
+
+          var intial = document.createTextNode('Travelling: ' + details4[i][1] + 'km, ');
+          element.appendChild(intial);
+
+          var charge_lat = document.createTextNode('Charging Station Latitude: ' + details4[i][2] + ', ');
+          element.appendChild(charge_lat);
+
+          var charge_lon = document.createTextNode('Charging Station Longitude: ' + details4[i][3] + ', ');
+          element.appendChild(charge_lon);
+
+          var current_soc = document.createTextNode('Current SoC: ' + details4[i][4] + '%, ');
+          element.appendChild(current_soc);
+
+          var charging_time = document.createTextNode('Charging Time: ' +secondsToHms(parseFloat(details4[i][5]) * 3600) + ', ');
+          element.appendChild(charging_time);
+
+          var updated_charge = document.createTextNode('Updated Charge: ' + details4[i][6] + '%, ');
+          element.appendChild(updated_charge);
+
+          let container2 = document.querySelector("#container");
+          container2.appendChild(element);
+
+          total_time = total_time + parseFloat(details4[i][5]) * 3600;
+
+         }
+
+
+
+      }
+
+  
+
+      
+      for (let i = 0; i < lst4.length; i++) {
+          arr.push([lst3[i][0], lst3[i][1]]);
+          
+         }
+      
+   
+
+
+      map.fitBounds(arr);
+
+      var element = document.createElement("p");
+
+      var currentsoc = document.createTextNode('Start SoC: ' + last_leg4[0][0] + '%, ');
+      element.appendChild(currentsoc);
+
+      var travelling = document.createTextNode('Travelling: ' + last_leg4[0][1] + 'km, ');
+      element.appendChild(travelling);
+
+      var arrivalsoc = document.createTextNode('Arrival SoC: ' + last_leg4[0][2] + '%,');
+      element.appendChild(arrivalsoc);
+
+      let container2 = document.querySelector("#container");
+      container2.appendChild(element);
+
+      let card = document.createElement("div");
+
+      let name = document.createTextNode('Total Trip Duration: ' + secondsToHms(total_time) + ', ');
+      card.appendChild(name);
+
+      let charging_time2 = document.createTextNode('Total Charging Duration: ' + secondsToHms(total_time - chargetotal) + ', ');
+      card.appendChild(charging_time2);
+
+      let description = document.createTextNode('Total Distance: ' + {{distance}} + ' km');
+      card.appendChild(description);
+
+      let container = document.querySelector("#container");
+      container.appendChild(card);
+
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors'}).addTo(map);
+      {{markers|safe}}
+
+
+  
+
+      function secondsToHms(d) {
+              d = Number(d);
+              var h = Math.floor(d / 3600);
+              var m = Math.floor(d % 3600 / 60);
+              var s = Math.floor(d % 3600 % 60);
+
+              var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+              var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+              var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+              return hDisplay + mDisplay + sDisplay; 
+      }
+
+      
+  </script>
+  </body>
+</html>
