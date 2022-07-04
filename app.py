@@ -22,24 +22,41 @@ def home():
             range_start,
             range_arrival,
             start_time,
+            intermediate_points,
         ) = preprocessing.collect_user_inputs(request.values)
 
         (
-                marker_lst,
-                markers,
-                mid_lat,
-                mid_lon,
-                point_list,
-                distance,
-                time,
-                initial_soc,
-                final_threshold,
-                start_time,
-                lst,
-                res,
-                last_leg,
-                night_travel,
-                time_end
+                        marker_lst,
+                        markers,
+                        mid_lat,
+                        mid_lon,
+                        point_list,
+                        distance,
+                        time,
+                        initial_soc,
+                        final_threshold,
+                        start_time,
+                        lst,
+                        res,
+                        last_leg,
+                        night_travel,
+                        time_end,
+                        
+                        marker_lst_alt,
+                        markers_alt,
+                        mid_lat,
+                        mid_lon,
+                        point_list_alt_1,
+                        distance_alt_1,
+                        time_alt_1,
+                        initial_soc,
+                        final_threshold,
+                        start_time,
+                        lst_alt_1,
+                        res_alt,
+                        last_leg_alt,
+                        night_travel_alt,
+                        time_end_alt
 
         ) = preprocessing.process_inputs(
             start_point=start_point,
@@ -47,6 +64,7 @@ def home():
             range_start=range_start,
             range_arrival=range_arrival,
             start_time=start_time,
+            intermediate_points=intermediate_points,
         )
 
         session["start-point"] = start_point
@@ -54,6 +72,8 @@ def home():
         session["range-start"] = range_start
         session["range-arrival"] = range_arrival
         session["start-time"] = start_time
+
+        
 
         session["marker_lst"] = json.dumps(marker_lst)
         session["markers"] = markers
@@ -70,6 +90,23 @@ def home():
         session["lst"] = json.dumps(res)
         session["night_travel"] = json.dumps(night_travel)
         session["time_end"] = time_end
+        
+
+        session["marker_lst_alt"] = json.dumps(marker_lst_alt)
+        session["markers_alt"] = markers_alt
+        session["mid_lat"] = mid_lat
+        session["mid_lon"] = mid_lon
+        session["pointList_alt_1"] = json.dumps(point_list_alt_1)
+        session["last_leg_alt"] = json.dumps(last_leg_alt)
+        session["distance_alt_1"] = distance_alt_1
+        session["time_alt_1"] = time_alt_1
+        session["initial_soc"] = initial_soc
+        session["final_threshold"] = final_threshold
+        session["trip_start_at"] = json.dumps(start_time)
+        session["details_alt"] = json.dumps(lst_alt_1)
+        session["lst_alt"] = json.dumps(res_alt)
+        session["night_travel_alt"] = json.dumps(night_travel_alt)
+        session["time_end_alt"] = time_end_alt
         
 
 
@@ -95,7 +132,23 @@ def results():
         lst=session.get("lst"),
         details=session.get("details"),
         night_travel = session.get("night_travel"),
-        time_end = session.get("time_end")
+        time_end = session.get("time_end"),
+        
+        marker_lst_alt = session.get("marker_lst_alt"),
+        markers_alt=session.get("markers_alt"),
+        lat_alt=session.get("mid_lat"),
+        lon_alt=session.get("mid_lon"),
+        pointList_alt=session.get("pointList_alt_1"),
+        last_leg_alt=session.get("last_leg_alt"),
+        distance_alt=session.get("distance_alt_1"),
+        time_alt=session.get("time_alt_1"),
+        intial_soc_alt=session.get("initial_soc"),
+        final_threshold_alt=session.get("final_threshold"),
+        trip_start_at_alt=session.get("trip_start_at"),
+        lst_alt=session.get("lst_alt"),
+        details_alt=session.get("details_alt"),
+        night_travel_alt = session.get("night_travel_alt"),
+        time_end_alt = session.get("time_end_alt")
     )
 
 
@@ -126,7 +179,25 @@ def ownrest():
                 night_travel,
                 time_end,
                 last_leg2,
-                rest_charge_last_leg
+                rest_charge_last_leg,
+
+                marker_lst_alt,
+                markers_alt,
+                mid_lat,
+                mid_lon,
+                point_list_alt_1,
+                distance_alt_1,
+                time_alt_1,
+                initial_soc,
+                final_threshold,
+                start_time,
+                lst_alt_1,
+                res_alt,
+                last_leg_alt,
+                night_travel_alt,
+                time_end_alt,
+                last_leg2_alt,
+                rest_charge_last_leg_alt,
 
     ) = preprocessing.process_inputs_own_rest(
             start_point=start_point,
@@ -157,6 +228,25 @@ def ownrest():
     session_own_rest["rest_charge_last_leg"] = json.dumps(rest_charge_last_leg)
 
 
+    session_own_rest["marker_lst_alt"] = json.dumps(marker_lst_alt)
+    session_own_rest["markers_alt"] = markers_alt
+    session_own_rest["mid_lat_alt"] = mid_lat
+    session_own_rest["mid_lon_alt"] = mid_lon
+    session_own_rest["pointList_alt"] = json.dumps(point_list_alt_1)
+    session_own_rest["last_leg_alt"] = json.dumps(last_leg_alt)
+    session_own_rest["distance_alt_1"] = distance_alt_1
+    session_own_rest["time_alt_1"] = time_alt_1
+    session_own_rest["initial_soc_alt"] = initial_soc
+    session_own_rest["final_threshold_alt"] = final_threshold
+    session_own_rest["trip_start_at_alt"] = json.dumps(start_time)
+    session_own_rest["details_alt"] = json.dumps(lst_alt_1)
+    session_own_rest["lst_alt"] = json.dumps(res_alt)
+    session_own_rest["night_travel_alt"] = json.dumps(night_travel_alt)
+    session_own_rest["time_end_alt"] = time_end_alt
+    session_own_rest["last_leg2_alt"] = json.dumps(last_leg2_alt)
+    session_own_rest["rest_charge_last_leg_alt"] = json.dumps(rest_charge_last_leg_alt)
+
+
     return render_template("ownrest.html",
             marker_lst = session_own_rest.get("marker_lst"),
             markers=session_own_rest.get("markers"),
@@ -175,6 +265,24 @@ def ownrest():
             time_end = session_own_rest.get("time_end"),
             last_leg2 = session_own_rest.get("last_leg2"),
             rest_charge_last_leg = session_own_rest.get("rest_charge_last_leg"),
+
+            marker_lst_alt = session_own_rest.get("marker_lst_alt"),
+            markers_alt=session_own_rest.get("markers_alt"),
+            lat_alt=session_own_rest.get("mid_lat_alt"),
+            lon_alt=session_own_rest.get("mid_lon_alt"),
+            pointList_alt=session_own_rest.get("pointList_alt"),
+            last_leg_alt=session_own_rest.get("last_leg_alt"),
+            distance_alt_1=session_own_rest.get("distance_alt_1"),
+            time_alt_1=session_own_rest.get("time_alt_1"),
+            intial_soc_alt=session_own_rest.get("initial_soc_alt"),
+            final_threshold_alt=session_own_rest.get("final_threshold_alt"),
+            trip_start_at_alt=session_own_rest.get("trip_start_at_alt"),
+            lst_alt_1=session_own_rest.get("lst_alt"),
+            details_alt=session_own_rest.get("details_alt"),
+            night_travel_alt = session_own_rest.get("night_travel_alt"),
+            time_end_alt = session_own_rest.get("time_end_alt"),
+            last_leg2_alt = session_own_rest.get("last_leg2_alt"),
+            rest_charge_last_leg_alt = session_own_rest.get("rest_charge_last_leg_alt"),
             )
 
 @app.route('/userchoice', methods=['GET','POST'])
