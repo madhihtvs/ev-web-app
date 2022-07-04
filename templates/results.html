@@ -28,7 +28,6 @@
 
     <div id ="container2"></div>
 
-
     <div id="map"></div>
       
     
@@ -36,8 +35,34 @@
     
 
     <script>
+      var iconOptions_POI = {
+      iconUrl: 'https://www.shareicon.net/data/2016/11/09/851644_circus_512x512.png',
+      iconSize: [30, 30]
+      }
+      var customIcon_POI = L.icon(iconOptions_POI);
+
+      var markerOptions_POI = {
+      title: "POI",
+      clickable: true,
+      icon: customIcon_POI
+      }
+
+      var iconOptions_CS = {
+      iconUrl: 'https://cdn3.iconfinder.com/data/icons/basicolor-computer-tech/24/105_battery_charging-512.png',
+      iconSize: [50, 50]
+      }
+      var customIcon_CS = L.icon(iconOptions_CS);
+
+      var markerOptions_CS = {
+      title: "CS",
+      clickable: true,
+      icon: customIcon_CS
+      }
+
+
 
       var boolValue = JSON.parse({{night_travel|tojson}});
+      var boolValuealt = JSON.parse({{night_travel_alt|tojson}});
 
 
       if (boolValue == true) {
@@ -92,8 +117,8 @@
       var map = L.map('map').setView([{{lat}}, {{lon}}], 12);
       var pointList1 = {{ pointList|tojson }};
       var pointList2 = JSON.parse(pointList1);
-      console.log(pointList2);
-      L.polyline(pointList2).addTo(map);
+      var defaultPolyline = L.polyline(pointList2).addTo(map);
+
       console.log({{distance}});
       console.log({{time}});
       console.log({{initial_soc}});
@@ -156,7 +181,7 @@
           var updated_charge = document.createTextNode('Updated Charge: ' + details4[i][6] + '%, ');
           element.appendChild(updated_charge);
 
-          let container2 = document.querySelector("#container");
+          let container2 = document.querySelector("#container2");
           container2.appendChild(element);
 
           total_time = total_time + parseFloat(details4[i][5]) * 3600;
@@ -191,7 +216,7 @@
       var arrivalsoc = document.createTextNode('Arrival SoC: ' + last_leg4[0][2] + '%,');
       element.appendChild(arrivalsoc);
 
-      let container2 = document.querySelector("#container");
+      let container2 = document.querySelector("#container2");
       container2.appendChild(element);
 
       let card = document.createElement("div");
@@ -205,12 +230,270 @@
       let description = document.createTextNode('Total Distance: ' + {{distance}} + ' km');
       card.appendChild(description);
 
-      let container = document.querySelector("#container");
+      let container = document.querySelector("#container2");
       container.appendChild(card);
+      
+      var marker_lst_alt = {{marker_lst_alt|tojson}};
+      var lat_alt = {{lat_alt}};
+      var lon_alt = {{lon_alt}};
+      
+      var pointList_alt = {{pointList_alt|tojson}};
+      var pointList_alt1 = JSON.parse(pointList_alt);
+      var alt_polyline = L.polyline(pointList_alt1).addTo(map);
+      alt_polyline.setStyle({
+              color: 'red'
+          });
+
+
+      var last_leg_alt = {{last_leg_alt|tojson}};
+      var distance_alt = {{distance_alt}};
+      var time_alt = {{time_alt}};
+      var lst_alt = {{lst_alt|tojson}};
+      var details_alt = {{details_alt|tojson}};
+      var night_travel_alt = {{night_travel_alt}};
+      var time_end_alt = {{time_end_alt}};
+      var intial_soc_alt = {{intial_soc_alt}};
+      var final_threshold_alt = {{final_threshold_alt}};
+      var trip_start_at_alt = {{trip_start_at_alt|tojson}};
+
+      defaultPolyline.on('click', function(event) {
+          const myNode = document.getElementById('container2');
+          myNode.replaceChildren();
+
+                let markers2 = {{marker_lst|tojson}};
+                var markers3 = JSON.parse(markers2);
+                var markers4 = markers3.toString();
+                var markers5 = markers4.split(",");
+
+                let arr = [];
+
+                var lst2 = {{ lst|tojson }};
+                var lst3 = JSON.parse(lst2);
+                var lst4 = Object.values(lst3);
+                
+                console.log(lst4);
+
+                var details2 = {{ details|tojson }};
+                var details3 = JSON.parse(details2);
+                var details4 = Object.values(details3);
+                console.log(details4);
+
+                let details = [];
+
+                var total_time = {{time}};
+                var chargetotal = total_time;
+
+                var last_leg2 = {{ last_leg|tojson }};
+                var last_leg3 = JSON.parse(last_leg2);
+                var last_leg4 = Object.values(last_leg3);
+                console.log(last_leg4);
+
+
+                if (details4.length > 0 && typeof details4[0]  != 'string')  {
+
+                    for (let i = 0; i < details4.length; i++) {
+                    details.push([details4[i][0], details4[i][1],details4[i][2],details4[i][3],details4[i][4],details4[i][5],details4[i][6]]);
+                    
+                    var element = document.createElement("p");
+                    var intial = document.createTextNode('Start SoC: ' + details4[i][0] + '%, ');
+                    element.appendChild(intial);
+
+                    var intial = document.createTextNode('Travelling: ' + details4[i][1] + 'km, ');
+                    element.appendChild(intial);
+
+                    var charge_lat = document.createTextNode('Charging Station Latitude: ' + details4[i][2] + ', ');
+                    element.appendChild(charge_lat);
+
+                    var charge_lon = document.createTextNode('Charging Station Longitude: ' + details4[i][3] + ', ');
+                    element.appendChild(charge_lon);
+
+                    var current_soc = document.createTextNode('Current SoC: ' + details4[i][4] + '%, ');
+                    element.appendChild(current_soc);
+
+                    var charging_time = document.createTextNode('Charging Time: ' +secondsToHms(parseFloat(details4[i][5]) * 3600) + ', ');
+                    element.appendChild(charging_time);
+
+                    var updated_charge = document.createTextNode('Updated Charge: ' + details4[i][6] + '%, ');
+                    element.appendChild(updated_charge);
+
+                    let container2 = document.querySelector("#container2");
+                    container2.appendChild(element);
+
+                    total_time = total_time + parseFloat(details4[i][5]) * 3600;
+
+                  }
+
+
+
+                }
+
+            
+
+                
+                for (let i = 0; i < lst4.length; i++) {
+                    arr.push([lst3[i][0], lst3[i][1]]);
+                    
+                  }
+                
+            
+
+
+                map.fitBounds(arr);
+
+                var element = document.createElement("p");
+
+                var currentsoc = document.createTextNode('Start SoC: ' + last_leg4[0][0] + '%, ');
+                element.appendChild(currentsoc);
+
+                var travelling = document.createTextNode('Travelling: ' + last_leg4[0][1] + 'km, ');
+                element.appendChild(travelling);
+
+                var arrivalsoc = document.createTextNode('Arrival SoC: ' + last_leg4[0][2] + '%,');
+                element.appendChild(arrivalsoc);
+
+                let container2 = document.querySelector("#container2");
+                container2.appendChild(element);
+
+                let card = document.createElement("div");
+
+                let name = document.createTextNode('Total Trip Duration: ' + secondsToHms(total_time) + ', ');
+                card.appendChild(name);
+
+                let charging_time2 = document.createTextNode('Total Charging Duration: ' + secondsToHms(total_time - chargetotal) + ', ');
+                card.appendChild(charging_time2);
+
+                let description = document.createTextNode('Total Distance: ' + {{distance}} + ' km');
+                card.appendChild(description);
+
+                let container = document.querySelector("#container2");
+                container.appendChild(card);
+
+
+      });
+
+      alt_polyline.on('click', function(event) {
+          const myNode = document.getElementById('container2');
+          myNode.replaceChildren();
+          
+
+          let marker_lst_alt2 = {{marker_lst_alt|tojson}};
+          var marker_lst_alt3 = JSON.parse(marker_lst_alt2);
+          var marker_lst_alt4 = marker_lst_alt3.toString();
+          var marker_lst_alt5 = marker_lst_alt4.split(",");
+
+          let arr = [];
+
+          var lst_alt2 = {{ lst_alt|tojson }};
+          var lst_alt3 = JSON.parse(lst_alt2);
+          var lst_alt4 = Object.values(lst_alt3);
+          
+          console.log(lst_alt4);
+
+          var details_alt2 = {{ details_alt|tojson }};
+          var details_alt3 = JSON.parse(details_alt2);
+          var details_alt4 = Object.values(details_alt3);
+          console.log(details_alt4);
+
+          let details = [];
+
+          var total_time = {{time_alt}};
+          var chargetotal = total_time;
+
+          var last_leg_alt2 = {{ last_leg_alt|tojson }};
+          var last_leg_alt3 = JSON.parse(last_leg_alt2);
+          var last_leg_alt4 = Object.values(last_leg_alt3);
+          console.log(last_leg_alt4);
+
+
+          if (details_alt4.length > 0 && typeof details_alt4[0]  != 'string')  {
+
+              for (let i = 0; i < details_alt4.length; i++) {
+              details.push([details_alt4[i][0], details_alt4[i][1],details_alt4[i][2],details_alt4[i][3],details_alt4[i][4],details_alt4[i][5],details_alt4[i][6]]);
+              
+              var element = document.createElement("p");
+              var intial = document.createTextNode('Start SoC: ' + details_alt4[i][0] + '%, ');
+              element.appendChild(intial);
+
+              var intial = document.createTextNode('Travelling: ' + details_alt4[i][1] + 'km, ');
+              element.appendChild(intial);
+
+              var charge_lat = document.createTextNode('Charging Station Latitude: ' + details_alt4[i][2] + ', ');
+              element.appendChild(charge_lat);
+
+              var charge_lon = document.createTextNode('Charging Station Longitude: ' + details_alt4[i][3] + ', ');
+              element.appendChild(charge_lon);
+
+              var current_soc = document.createTextNode('Current SoC: ' + details_alt4[i][4] + '%, ');
+              element.appendChild(current_soc);
+
+              var charging_time = document.createTextNode('Charging Time: ' +secondsToHms(parseFloat(details_alt4[i][5]) * 3600) + ', ');
+              element.appendChild(charging_time);
+
+              var updated_charge = document.createTextNode('Updated Charge: ' + details_alt4[i][6] + '%, ');
+              element.appendChild(updated_charge);
+
+              let container2 = document.querySelector("#container2");
+              container2.appendChild(element);
+
+              total_time = total_time + parseFloat(details_alt4[i][5]) * 3600;
+
+            }
+
+
+
+          }
+
+      
+
+          
+          for (let i = 0; i < lst_alt4.length; i++) {
+              arr.push([lst3[i][0], lst3[i][1]]);
+              
+            }
+          
+      
+
+
+          map.fitBounds(arr);
+
+          var element = document.createElement("p");
+
+          var currentsoc = document.createTextNode('Start SoC: ' + last_leg_alt4[0][0] + '%, ');
+          element.appendChild(currentsoc);
+
+          var travelling = document.createTextNode('Travelling: ' + last_leg_alt4[0][1] + 'km, ');
+          element.appendChild(travelling);
+
+          var arrivalsoc = document.createTextNode('Arrival SoC: ' + last_leg_alt4[0][2] + '%,');
+          element.appendChild(arrivalsoc);
+
+          let container2 = document.querySelector("#container2");
+          container2.appendChild(element);
+
+          let card = document.createElement("div");
+
+          let name = document.createTextNode('Total Trip Duration: ' + secondsToHms(total_time) + ', ');
+          card.appendChild(name);
+
+          let charging_time2 = document.createTextNode('Total Charging Duration: ' + secondsToHms(total_time - chargetotal) + ', ');
+          card.appendChild(charging_time2);
+
+          let description = document.createTextNode('Total Distance: ' + {{distance_alt}} + ' km');
+          card.appendChild(description);
+
+          let container = document.querySelector("#container2");
+          container.appendChild(card);
+
+            
+
+        });
+
 
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors'}).addTo(map);
       {{markers|safe}};
+
+      {{markers_alt|safe}};
 
 
 
