@@ -240,6 +240,27 @@ ave_speed, trip_start_at, trip_start, total_time):
         dist_travelled += possible_dist
         dist_travelled = min(total_distance, dist_travelled)
         dist_left = total_distance - dist_travelled
+        if dist_left <= 0.0:
+            soc_reduction = possible_dist / (range_ev/100)
+            print("No More Stops, Final Lap")
+            print("Starting SoC:", new_soc, "%")
+            print(f"Distance Travelled in Total: {dist_travelled} km")
+            print("Travelling", possible_dist, "km now")
+                    
+            print("Current SoC:", new_soc - soc_reduction, "%")
+
+            yield [new_soc, possible_dist, new_soc - soc_reduction]
+
+            dist_left = dist_left - dist_left
+            print("Trip Duration:",total_time/3600, "hrs")
+            sec = get_sec(trip_start) + total_time
+            td = timedelta(seconds=sec)
+            print("Trip End:",td )
+
+            yield [sec, False , new_soc - soc_reduction]
+            print("Reached Destination:", dist_left, "km left")
+            break
+       
         df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
 
         while len(df_1) < 1:
@@ -309,7 +330,7 @@ ave_speed, trip_start_at, trip_start, total_time):
                         b = new_soc
                         print("*************")
                         yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],b]
-                     
+
 
 
                     else:
@@ -328,7 +349,7 @@ ave_speed, trip_start_at, trip_start, total_time):
                         b = new_soc
                         print("*************")
                         yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b]
-                
+                        
 
 
         
