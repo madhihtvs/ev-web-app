@@ -26,28 +26,50 @@
     role="tabpanel"
     aria-labelledby="plan-trip-tab"
   >
+    <div style="margin: 5% 0%">
+      <button
+        onclick="add()"
+        style="padding: 2%; background-color: red; color: white"
+      >
+        Add another point
+      </button>
+      <button
+        onclick="remove()"
+        style="padding: 2%; background-color: red; color: white"
+      >
+        Remove last added point
+      </button>
+    </div>
     <form method="POST" autocomplete="off">
-      <input
-        id="start-point"
-        name="start-point"
-        type="search"
-        class="form-control rounded"
-        placeholder="Add Starting Point"
-        aria-label="Search"
-        aria-describedby="search-addon"
-      />
-      <br />
-      <input
-        id="end-point"
-        name="end-point"
-        type="search"
-        class="form-control rounded"
-        placeholder="Add Destination"
-        aria-label="Search"
-        aria-describedby="search-addon"
-      />
-      <br />
+      <div id="points" style="display: table; width: 100%; table-layout: fixed">
+        <input
+          id="start-point"
+          name="start-point"
+          type="search"
+          style="display: table-cell; width: 100%; padding: 2%"
+          class="form-control rounded"
+          placeholder="Add Starting Point"
+          aria-label="Search"
+          aria-describedby="search-addon"
+        />
+        <br />
+        <br />
+        <div id="intermediate"></div>
+        <br />
+        <input
+          id="end-point"
+          name="end-point"
+          type="search"
+          class="form-control rounded"
+          placeholder="Add Destination"
+          aria-label="Search"
+          style="display: table-cell; width: 100%; padding: 2%"
+          aria-describedby="search-addon"
+        />
+      </div>
+      <input type="hidden" value="1" id="total_chq" />
 
+      <br />
       <input
         id="range-start"
         name="range-start"
