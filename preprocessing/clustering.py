@@ -16,47 +16,72 @@ def clustering_algo(path, stations):
 
     
     # stations["Station Name"] = stations["Station Name"].str.replace(',','')
-    # stations.drop(columns=['Sl No'])
-    stations_pos = stations[['Latitude', 'Longitude']].to_numpy()
-    path = path[["lat","lng"]]
-    path = path.iloc[::15, :]
-    path = path.to_numpy()
+    stations.drop(columns=['Sl No'])
+    # stations_pos = stations[['Latitude', 'Longitude']].to_numpy()
+    # path = path[["lat","lng"]]
+    # path = path.iloc[::15, :]
+    # path = path.to_numpy()
 
-    zs = np.abs(zscore(stations_pos, 0))
-    filtered_entries = (zs < 3).all(axis=1)
-    stations_pos = stations_pos[filtered_entries]
+    # zs = np.abs(zscore(stations_pos, 0))
+    # filtered_entries = (zs < 3).all(axis=1)
+    # stations_pos = stations_pos[filtered_entries]
 
-    disntace_matrix = distance_matrix(path, stations_pos)
+    # disntace_matrix = distance_matrix(path, stations_pos)
 
-    # for each point in the path, we take the 5 closest recharging stations (without counting the duplciates)
-    closest = np.argsort(disntace_matrix, -1)[:, :5]
-    closest = np.unique(closest.ravel())
-    closest_points = stations_pos[closest]
+    # # for each point in the path, we take the 5 closest recharging stations (without counting the duplciates)
+    # closest = np.argsort(disntace_matrix, -1)[:, :5]
+    # closest = np.unique(closest.ravel())
+    # closest_points = stations_pos[closest]
 
-    closest_df = pd.DataFrame(closest_points, columns=['Latitude', 'Longitude']) 
+    # closest_df = pd.DataFrame(closest_points, columns=['Latitude', 'Longitude']) 
 
-    closest_df = pd.merge(stations, closest_df, how='inner')
+    # closest_df = pd.merge(stations, closest_df, how='inner')
     
 
-    path_df = pd.DataFrame(path, columns=['Latitude', 'Longitude']) 
+    # path_df = pd.DataFrame(path, columns=['Latitude', 'Longitude']) 
 
+    # closest_df["route"] = 0
+
+    # path_df["route"] = 1
+    # route_df = path_df.append([closest_df], ignore_index = True)
+
+
+    # route_df['route'] = route_df['route'].astype(str)
+    # df22 = route_df[route_df['route'] == '0']
+    # dff = route_df[route_df['route'] == '1']
+
+    # df22["lat_lon"] = list(zip(df22.Latitude, df22.Longitude))
+
+    closest_df = stations
     closest_df["route"] = 0
+    
 
+
+
+
+    mega = []
+    # path_df = path_df[["Latitude", "Longitude"]]
+    # closest_df2 = closest_df[["Latitude", "Longitude"]]
+    # path2 = path_df.to_numpy()
+    # closest2 = closest_df2.to_numpy()
+    path2 = path[["lat","lng"]]
+    path2 = path2.iloc[::15, :]
+    path2 = path2.to_numpy()
+
+    
+    path_df = pd.DataFrame(path2, columns=['Latitude', 'Longitude']) 
     path_df["route"] = 1
     route_df = path_df.append([closest_df], ignore_index = True)
 
 
     route_df['route'] = route_df['route'].astype(str)
-    df22 = route_df[route_df['route'] == '0']
+    #df22 = route_df[route_df['route'] == '0']
     dff = route_df[route_df['route'] == '1']
 
-    df22["lat_lon"] = list(zip(df22.Latitude, df22.Longitude))
 
-    mega = []
-    path_df = path_df[["Latitude", "Longitude"]]
-    closest_df2 = closest_df[["Latitude", "Longitude"]]
-    path2 = path_df.to_numpy()
-    closest2 = closest_df2.to_numpy()
+    closest2 = stations[['Latitude', 'Longitude']].to_numpy()
+
+
     disntace_matrix2 = distance_matrix(path2, closest2)
 
 
@@ -64,7 +89,8 @@ def clustering_algo(path, stations):
         a = list(disntace_matrix2[i])
         minimum = min(a)
         idx = a.index(minimum)
-        closest = closest_df.loc[idx]
+        closest = stations.loc[idx]
+        #closest = closest_df.loc[idx]
         mega.append([closest["Station Name"],closest["Latitude"], closest["Longitude"], minimum])
 
 
@@ -196,7 +222,7 @@ def dimension_reduction(path, origin_lat, origin_lon, dest_lat, dest_lon, statio
     route_array = route_df.to_numpy()
     stations2 = stations2[['Latitude', 'Longitude']].to_numpy()
     kdB = KDTree(stations2)
-    ind = kdB.query(route_array, k=20)[-1]
+    ind = kdB.query(route_array, k=5)[-1]
 
     lst = []
 
