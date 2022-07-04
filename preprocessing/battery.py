@@ -53,6 +53,14 @@ ave_speed, trip_start_at, trip_start, total_time):
         dist_travelled += possible_dist
         dist_left = total_distance - dist_travelled
         df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
+        
+        while len(df_1) < 1:
+            dist_travelled -= 0.5
+            dist_left += 0.5
+            possible_dist -= 0.5
+            df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
+
+        
         df_1.sort_values(by = ['Distance_to_CS'])
         idx = df_1.index[0]
         a = [idx,df_1.iloc[0]["Name_Charging_Station"],df_1.iloc[0]["Lat_CS"],df_1.iloc[0]["Lng_CS"],df_1.iloc[0]["Distance_to_CS"]]
@@ -227,14 +235,15 @@ ave_speed, trip_start_at, trip_start, total_time):
             print("Vehicle is unable to travel safely")
             break
         
-
+        
         possible_dist = min(dist_left, range_ev/100 * (initial_soc-min_threshold))
         dist_travelled += possible_dist
         dist_travelled = min(total_distance, dist_travelled)
         dist_left = total_distance - dist_travelled
         df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
-    
+
         while len(df_1) < 1:
+            
             dist_travelled += 0.5
             dist_left -= 0.5
             df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
@@ -275,7 +284,7 @@ ave_speed, trip_start_at, trip_start, total_time):
                 print("Current SoC:", initial_soc - (possible_dist/ (range_ev/100)), "%")
                 print("Leg Start:", trip_start)
                 leg_end = timedelta(seconds= (get_sec(trip_start) + (possible_dist/ave_speed * 3600)))
-                total_time += (possible_dist/ave_speed) * 3600
+           
                 print("Leg End:",str(leg_end))
                 print("Stop:", stop)
                 print("Distance Travelled in Total:", dist_travelled, "km")
@@ -296,9 +305,11 @@ ave_speed, trip_start_at, trip_start, total_time):
                         print("Total Time:", total_time/3600)
                         new_soc = 100
                         print("Updated Charge:",new_soc, "%")
+            
                         b = new_soc
                         print("*************")
                         yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],b]
+                     
 
 
                     else:
@@ -313,10 +324,11 @@ ave_speed, trip_start_at, trip_start, total_time):
                         total_time += charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
                          
                         print("Updated Charge:",b, "%")
+               
                         b = new_soc
                         print("*************")
                         yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b]
-
+                
 
 
         
@@ -335,10 +347,12 @@ ave_speed, trip_start_at, trip_start, total_time):
                         print("Total Time:", total_time/3600)
                         new_soc = 100
                         print("Updated Charge:",new_soc, "%")
+                
                         b = new_soc
                         print("*************")
 
                         yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],b]
+              
 
                     else:
 
@@ -352,16 +366,17 @@ ave_speed, trip_start_at, trip_start, total_time):
                         total_time += charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
                           
                         print("Updated Charge:",b, "%")
+            
                         print("*************")
                         yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b]
-
+                
                                 
 
                 print("Travelling", dist_left, "km now")
                 soc_reduction = dist_left / (range_ev/100)
                 print("Leg Start:", str(time_end))
                 leg_end = timedelta(seconds= (get_sec(str(time_end)) + (dist_left/ave_speed * 3600)))
-                total_time += (dist_left/ave_speed) * 3600
+            
                 print("Leg End:",str(leg_end))                
                 print("Current SoC:", b - soc_reduction, "%")
                 yield [b, dist_left, b-soc_reduction]
@@ -403,7 +418,7 @@ ave_speed, trip_start_at, trip_start, total_time):
         print("Current SoC:", initial_soc - (possible_dist/ (range_ev/100)), "%")
         print("Leg Start:", trip_start)
         leg_end = timedelta(seconds= (get_sec(trip_start) + (possible_dist/ave_speed * 3600)))
-        total_time += (possible_dist/ave_speed) * 3600
+
         print("Leg End:",str(leg_end))
         print("Stop:", stop)
         print("Distance Travelled in Total:", dist_travelled, "km")
@@ -495,9 +510,10 @@ ave_speed, trip_start_at, trip_start, total_time):
         total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
         initial_soc = new_soc
         stop += 1
+
         trip_start = str(time_end)
 
-    
+
 def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, range_ev, stop, final_threshold, range_needed,
     ave_speed, trip_start_at, trip_start, total_time, rest_lat, rest_lon,distance_travelled_by_rest_place): 
 
@@ -528,10 +544,19 @@ def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, ran
 
     dist_left = total_distance - distance_travelled_by_rest_place
     dist_travelled = distance_travelled_by_rest_place
+  
+
     df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(distance_travelled_by_rest_place) ) & (df['distance_travelled_till_here'] <= math.ceil(distance_travelled_by_rest_place+0.5))]
+    
+    while len(df_1) < 1:
+        dist_travelled -= 0.5
+        dist_left += 0.5
+        df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
+
     df_1.sort_values(by = ['Distance_to_CS'])
     idx = df_1.index[0]
     a = [idx,df_1.iloc[0]["Name_Charging_Station"],df_1.iloc[0]["Lat_CS"],df_1.iloc[0]["Lng_CS"],df_1.iloc[0]["Distance_to_CS"]]
+        
 
     print("Charge at:", a)
     print("Charging Start Time:", str(trip_end).split(".", 1)[0])
@@ -577,6 +602,7 @@ def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, ran
                     dist_left += 0.5
                     possible_dist -= 0.5
                     df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
+                    print(df_1)
                     if possible_dist < 10:
                         place = False
                         break
@@ -593,7 +619,7 @@ def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, ran
                     print("Current SoC:", initial_soc - (possible_dist/ (range_ev/100)), "%")
                     print("Leg Start:", trip_start)
                     leg_end = timedelta(seconds= (get_sec(trip_start) + (possible_dist/ave_speed * 3600)))
-                    total_time += (possible_dist/ave_speed) * 3600
+        
                     print("Leg End:",str(leg_end))
                     print("Stop:", stop)
                     print("Distance Travelled in Total:", dist_travelled, "km")
@@ -610,10 +636,10 @@ def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, ran
                         
                     print("Updated Charge:",b, "%")
                     print("*************")
-
+            
                     yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b]
             
-                        
+                    
 
                     print("Travelling", dist_left, "km now")
                     print("Leg Start:", str(time_end))
@@ -630,6 +656,7 @@ def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, ran
                     print("Trip End:",td )
                     print("Reached Destination:", dist_left, "km left")
                     yield [sec, False , b - soc_reduction]
+                    break
 
                 else:
                     dist_travelled -= possible_dist
@@ -654,6 +681,7 @@ def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, ran
                     print("Trip End:",td )
                     print("Reached Destination:", dist_left, "km left")
                     yield [sec, False , new_soc - soc_reduction]
+                    break
 
 
 
@@ -727,6 +755,7 @@ def station_coordinates_own_rest(df, initial_soc, min_threshold, total_distance,
         for value in own_rest(df, initial_soc, min_threshold, total_distance, 
         dist_travelled, range_ev, stop, final_threshold, range_needed,
     ave_speed, trip_start_at, trip_start, total_time, rest_lat, rest_lon,distance_travelled_by_rest_place): 
+            print(value)
             lst[stop] = value
             stop += 1
 
