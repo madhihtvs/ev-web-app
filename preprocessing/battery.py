@@ -240,6 +240,7 @@ ave_speed, trip_start_at, trip_start, total_time):
         dist_travelled += possible_dist
         dist_travelled = min(total_distance, dist_travelled)
         dist_left = total_distance - dist_travelled
+
         if dist_left <= 0.0:
             soc_reduction = possible_dist / (range_ev/100)
             print("No More Stops, Final Lap")
