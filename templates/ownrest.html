@@ -36,6 +36,32 @@
 
     <script>
 
+var iconOptions_CS = {
+      iconUrl: 'https://cdn3.iconfinder.com/data/icons/basicolor-computer-tech/24/105_battery_charging-512.png',
+      iconSize: [50, 50]
+      }
+      var customIcon_CS = L.icon(iconOptions_CS);
+
+      var markerOptions_CS = {
+      title: "CS",
+      clickable: true,
+      icon: customIcon_CS
+      }
+
+      var iconOptions_Hotel = {
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/235/235889.png',
+      iconSize: [30, 30]
+      }
+      var customIcon_Hotel = L.icon(iconOptions_Hotel);
+
+      var markerOptions_Hotel = {
+      title: "Hotel",
+      clickable: true,
+      icon: customIcon_Hotel
+      }
+
+
+
       var map = L.map('map').setView([{{lat}}, {{lon}}], 12);
       var pointList1 = {{ pointList|tojson }};
       var pointList2 = JSON.parse(pointList1);
