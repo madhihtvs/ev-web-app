@@ -260,6 +260,8 @@
           const myNode = document.getElementById('container2');
           myNode.replaceChildren();
 
+                console.log("Default Clicked");
+
                 let markers2 = {{marker_lst|tojson}};
                 var markers3 = JSON.parse(markers2);
                 var markers4 = markers3.toString();
@@ -375,6 +377,7 @@
           const myNode = document.getElementById('container2');
           myNode.replaceChildren();
           
+          console.log("Alternate Clicked");
 
           let marker_lst_alt2 = {{marker_lst_alt|tojson}};
           var marker_lst_alt3 = JSON.parse(marker_lst_alt2);
