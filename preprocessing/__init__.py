@@ -143,9 +143,12 @@ def process_inputs_own_rest(
     rest_place = backend.get_coordinates(rest_point)
     rest_lat, rest_lon = get_lat_long_from_coordinates(rest_place)
 
+    accom_lat, accom_lon = rest_lat, rest_lon
+
     destination = backend.get_coordinates(end_point)
     destination_lat, destination_lon = get_lat_long_from_coordinates(destination)
 
+    
     closest_df = clustering.near_points([[rest_lat, rest_lon]], stations = pd.read_csv('./resources/bng_df.csv'))
 
     closest_df["lat_lon"] = list(zip(closest_df.Latitude, closest_df.Longitude))
@@ -159,7 +162,7 @@ def process_inputs_own_rest(
 
     rest_lat, rest_lon = closest["Latitude"], closest["Longitude"]
 
-
+    
     point_list, distance_travelled_by_rest_place, time = backend.get_route(
         origin_lat, origin_lon, rest_lat, rest_lon
     )
@@ -168,19 +171,17 @@ def process_inputs_own_rest(
     )
 
   
-
+    stations = get_stations_data(point_list, origin_lat, origin_lon, destination_lat, destination_lon, bng_dat_path)
+    
 
     markers = get_markers(origin_lat, origin_lon, destination_lat, destination_lon)
     mid_lat, mid_lon = compute_midpoint(
         origin_lat, origin_lon, destination_lat, destination_lon
     )
 
-    df = get_clustering_data(point_list,origin_lat, origin_lon, destination_lat, destination_lon, bng_dat_path)
-
-
-
-    df_alt_1 = get_clustering_data(point_list_alt_1, origin_lat, origin_lon, destination_lat, destination_lon, bng_dat_path)
-
+    df = get_clustering_data(point_list, origin_lat, origin_lon, destination_lat, destination_lon, stations, bng_dat_path)
+    df_alt_1 = get_clustering_data(point_list_alt_1, origin_lat, origin_lon, destination_lat, destination_lon,stations, bng_dat_path)
+    
 
     initial_soc = float(range_start)
     final_threshold = float(range_arrival)
@@ -354,7 +355,7 @@ def process_inputs_own_rest(
 
             for i in lst.keys():
                 id = "stop" + str(i)
-                markers += "var {idd} = L.marker([{latitude}, {longitude}]);\
+                markers += "var {idd} = L.marker([{latitude}, {longitude}],markerOptions_CS);\
                                                 {idd}.addTo(map);".format(idd=id, latitude=float(lst[i][2]),\
                                                                                         longitude=float(lst[i][3]),
                                                                                                 )
@@ -369,7 +370,7 @@ def process_inputs_own_rest(
 
             for i in lst3.keys():
                 id = "stoprest" + str(i)
-                markers += "var {idd} = L.marker([{latitude}, {longitude}]);\
+                markers += "var {idd} = L.marker([{latitude}, {longitude}],markerOptions_CS);\
                                                 {idd}.addTo(map);".format(idd=id, latitude=float(lst3[i][1]),\
                                                                                         longitude=float(lst3[i][2]),
                                                                                                 )
@@ -379,6 +380,20 @@ def process_inputs_own_rest(
                                                                                                 )
                                 )
                 lst_coord.append([lst3[i][1],lst3[i][2]])
+
+            
+            rest_address = backend.get_address(accom_lat, accom_lon)
+            id = "restlocationbyuser"
+            markers += "var {idd} = L.marker([{latitude}, {longitude}],markerOptions_Hotel);\
+                                                {idd}.addTo(map);".format(idd=id, latitude=float(accom_lat),\
+                                                                                        longitude=float(accom_lon),
+                                                                               
+                                                                                         )
+            name_accom = f"{rest_address}"                                                                        
+            markers += """{idd}.bindPopup("{data}");""".format(idd=id, data = name_accom)
+
+
+
 
             last_leg2 = lst3
 
@@ -419,7 +434,7 @@ def process_inputs_own_rest(
 
             for i in lst_alt_1.keys():
                 id = "stop_alt" + str(i)
-                markers_alt += "var {idd} = L.marker([{latitude}, {longitude}]);\
+                markers_alt += "var {idd} = L.marker([{latitude}, {longitude}],markerOptions_CS);\
                                                 {idd}.addTo(map);".format(idd=id, latitude=float(lst[i][2]),\
                                                                                         longitude=float(lst[i][3]),
                                                                                                 )
@@ -434,7 +449,7 @@ def process_inputs_own_rest(
 
             for i in lst3_alt.keys():
                 id = "stoprest_alt" + str(i)
-                markers_alt += "var {idd} = L.marker([{latitude}, {longitude}]);\
+                markers_alt += "var {idd} = L.marker([{latitude}, {longitude}],markerOptions_CS);\
                                                 {idd}.addTo(map);".format(idd=id, latitude=float(lst3[i][1]),\
                                                                                         longitude=float(lst3[i][2]),
                                                                                                 )
@@ -445,14 +460,26 @@ def process_inputs_own_rest(
                                 )
                 lst_coord_alt.append([lst3[i][1],lst3[i][2]])
 
-                last_leg2_alt = lst3_alt
 
-                lst2_alt = lst_coord_alt
-                lst2_alt.insert(0, [origin_lat, origin_lon])
-                lst2_alt.append([destination_lat, destination_lon])
-                idx_alt = [i for i in range(len(lst2_alt))]
-                res_alt = {idx_alt[i]: lst2_alt[i] for i in range(len(idx_alt))}
-                point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_many(lst2_alt)
+            rest_address = backend.get_address(accom_lat, accom_lon)
+            id = "restlocationbyuser"
+            markers_alt += "var {idd} = L.marker([{latitude}, {longitude}],markerOptions_Hotel);\
+                                                {idd}.addTo(map);".format(idd=id, latitude=float(accom_lat),\
+                                                                                        longitude=float(accom_lon),
+                                                                                
+                                                                                                )
+            name_accom = f"{rest_address}"                                                                        
+            markers_alt += """{idd}.bindPopup("{data}");""".format(idd=id, data = name_accom)
+
+
+            last_leg2_alt = lst3_alt
+
+            lst2_alt = lst_coord_alt
+            lst2_alt.insert(0, [origin_lat, origin_lon])
+            lst2_alt.append([destination_lat, destination_lon])
+            idx_alt = [i for i in range(len(lst2_alt))]
+            res_alt = {idx_alt[i]: lst2_alt[i] for i in range(len(idx_alt))}
+            point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_many(lst2_alt)
             
            
             return (
@@ -1077,11 +1104,17 @@ def process_inputs_nonight(
     )
 
     point_list, distance, time = backend.get_route(
-        origin_lat, origin_lon, destination_lat, destination_lon
-    )
+            origin_lat, origin_lon, destination_lat, destination_lon
+        )
+    point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_short(
+            origin_lat, origin_lon, destination_lat, destination_lon
+        )
 
     stations = get_stations_data(point_list, origin_lat, origin_lon, destination_lat, destination_lon, bng_dat_path)
     df = get_clustering_data(point_list,origin_lat, origin_lon, destination_lat, destination_lon, stations, bng_dat_path)
+    df_alt_1 = get_clustering_data(point_list_alt_1, origin_lat, origin_lon, destination_lat, destination_lon,stations, bng_dat_path)
+    
+
 
     initial_soc = float(range_start)
     final_threshold = float(range_arrival)
@@ -1100,6 +1133,22 @@ def process_inputs_nonight(
         initial_soc,
         min_threshold,
         total_distance,
+        dist_travelled,
+        range_ev,
+        stop,
+        final_threshold,
+        range_needed,
+        ave_speed,
+        start_time,
+        trip_start,
+        total_time,
+    )
+
+    lst_alt_1 = battery.station_coordinates_no_night(
+        df_alt_1,
+        initial_soc,
+        min_threshold,
+        distance_alt_1,
         dist_travelled,
         range_ev,
         stop,
@@ -1134,8 +1183,32 @@ def process_inputs_nonight(
                                                                                         longitude=origin_lon,
                                                                                                 ))
         marker_lst.append("L.marker([{latitude}, {longitude}])".format(latitude=destination_lat,\
-                                                                                        longitude=destination_lon,
+                                                                                        longitude=origin_lon,
                                                                                                 ))
+        
+        night_travel_alt = False
+        time_end_alt = 0
+        point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_short(origin_lat, origin_lon, destination_lat, destination_lon)    
+        lst_alt_1 = [lst_alt_1]
+        idx_lst_alt = [0]
+        lst = dict(zip(idx_lst_alt, lst_alt_1))
+                
+        lst_coord_alt = []
+        lst2_alt = lst_coord_alt
+        marker_lst_alt = []
+        lst2_alt.insert(0, [origin_lat, origin_lon])
+        lst2_alt.append([destination_lat, destination_lon])
+        idx_alt = [i for i in range(len(lst2_alt))]
+        res_alt = {idx_alt[i]: lst2_alt[i] for i in range(len(idx_alt))}
+        last_leg_alt = {0: [initial_soc, distance, initial_soc - (distance/ (range_ev/100))]}
+
+        marker_lst_alt.append("L.marker([{latitude}, {longitude}])".format(latitude=origin_lat,\
+                                                                                        longitude=origin_lon,
+                                                                                                ))
+        marker_lst_alt.append("L.marker([{latitude}, {longitude}])".format(latitude=destination_lat,\
+                                                                     longitude=destination_lon,
+        markers_alt = markers    
+                                                                                             ))
         return (
         marker_lst,
         markers,
@@ -1151,7 +1224,23 @@ def process_inputs_nonight(
         res,
         last_leg,
         night_travel,
-        time_end)
+        time_end,
+        
+        marker_lst_alt,
+        markers_alt,
+        mid_lat,
+                mid_lon,
+                    point_list_alt_1,
+                    distance_alt_1,
+                    time_alt_1,
+                    initial_soc,
+                    final_threshold,
+                    start_time,
+                    lst_alt_1,
+                    res_alt,
+                    last_leg_alt,
+                    night_travel_alt,
+                    time_end_alt)
 
     else:
         keys = list(lst.keys())
@@ -1172,7 +1261,7 @@ def process_inputs_nonight(
 
             for i in lst.keys():
                 id = "stop" + str(i)
-                markers += "var {idd} = L.marker([{latitude}, {longitude}]);\
+                markers += "var {idd} = L.marker([{latitude}, {longitude}], markerOptions_CS);\
                                                 {idd}.addTo(map);".format(idd=id, latitude=float(lst[i][2]),\
                                                                                         longitude=float(lst[i][3]),
                                                                                                 )
@@ -1190,7 +1279,7 @@ def process_inputs_nonight(
                 df = pd.concat([df, df2],ignore_index=True)
             
             for index, row in df.iterrows():
-                id = "POI" + str(index)
+                id = "Hotel" + str(index)
                 
                 
                 markers += "var {idd} = L.marker([{latitude}, {longitude}], markerOptions_Hotel);\
@@ -1214,6 +1303,66 @@ def process_inputs_nonight(
             res = {idx[i]: lst2[i] for i in range(len(idx))}
             point_list, distance, time = backend.get_route_many(lst2)
            
+            # For alternate route 1
+            keys_alt = list(lst_alt_1.keys())
+            time_end_alt = lst_alt_1[keys_alt[-1]][0]
+            night_travel_alt = lst_alt_1[keys_alt[-1]][1]
+            if len(keys_alt) > 1:
+                last_leg_alt = [lst_alt_1[keys_alt[-2]]]
+                idx_lst_alt = [0]
+                last_leg_alt = dict(zip(idx_lst_alt, last_leg_alt))
+
+                lst3_alt = copy.deepcopy(lst_alt_1)
+
+                del lst_alt_1[keys_alt[-1]]
+                keys_alt = keys_alt[:-1]
+                del lst_alt_1[keys_alt[-1]]
+                marker_lst_alt = []
+                lst_coord_alt = []
+                markers_alt = markers
+
+                for i in lst_alt_1.keys():
+                    id_alt = "stop" + str(i)
+                    markers_alt += "var {idd} = L.marker([{latitude}, {longitude}], markerOptions_CS);\
+                                                    {idd}.addTo(map);".format(idd=id_alt, latitude=float(lst_alt_1[i][2]),\
+                                                                                            longitude=float(lst_alt_1[i][3]),
+                                                                                                    )
+
+                    marker_lst_alt.append("L.marker([{latitude}, {longitude}])".format(latitude=float(lst_alt_1[i][2]),\
+                                                                                            longitude=float(lst_alt_1[i][3]),
+                                                                                                    )
+                                    )
+                    lst_coord_alt.append([lst_alt_1[i][2],lst_alt_1[i][3]])
+
+            df_alt = pd.DataFrame(columns = ["Name","Category","Latitude", "Longitude"])
+            for i in lst_coord_alt:
+                df2 = backend.get_Hotel(i[0], i[1])
+                df_alt = pd.concat([df_alt, df2],ignore_index=True)
+                
+            for index, row in df_alt.iterrows():
+                id_alt = "Hotel_alt" + str(index)
+                    
+                    
+                markers_alt += "var {idd} = L.marker([{latitude}, {longitude}],markerOptions_Hotel);\
+                                                    {idd}.addTo(map);".format(idd=id_alt, latitude=float(row[2]),\
+                                                                                            longitude=float(row[3]),
+                                                                                            name = row[0],
+                                                                                            category = row[1] )
+                    
+                data = f"{row[0]}, {row[1]}"                                                                        
+                markers_alt += """{idd}.bindPopup("{data}");""".format(idd=id_alt, data = data)
+
+                marker_lst_alt.append("L.marker([{latitude}, {longitude}])".format(latitude=float(row[2]),\
+                                                                                            longitude=float(row[3]), ))
+            lst2_alt = lst_coord_alt
+            lst2_alt.insert(0, [origin_lat, origin_lon])
+            lst2_alt.append([destination_lat, destination_lon])
+            idx_alt = [i for i in range(len(lst2_alt))]
+            res_alt = {idx[i]: lst2_alt[i] for i in range(len(idx_alt))}
+            point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_many_short(lst2_alt)
+                                                                                                
+
+
             return (
                 marker_lst,
                 markers,
@@ -1229,7 +1378,23 @@ def process_inputs_nonight(
                 res,
                 last_leg,
                 night_travel,
-                time_end)
+                time_end,
+                
+                marker_lst_alt,
+                    markers_alt,
+                    mid_lat,
+                    mid_lon,
+                    point_list_alt_1,
+                    distance_alt_1,
+                    time_alt_1,
+                    initial_soc,
+                    final_threshold,
+                    start_time,
+                    lst_alt_1,
+                    res_alt,
+                    last_leg_alt,
+                    night_travel_alt,
+                    time_end_alt)
 
         else:
             last_leg = [lst[keys[-1]]]
@@ -1247,8 +1412,30 @@ def process_inputs_nonight(
                                                                                         longitude=origin_lon,
                                                                                                 ))
             marker_lst.append("L.marker([{latitude}, {longitude}])".format(latitude=destination_lat,\
+            
+            
+                                                                        longitude=destination_lon,
+                                                                                                ))  
+
+                                                                                                
+            last_leg_alt = [lst_alt_1[keys_alt[-1]]]
+            idx_lst_alt = [0]
+            last_leg_alt = dict(zip(idx_lst_alt, last_leg_alt))
+            lst_coord_alt = []
+            lst2_alt = lst_coord_alt
+            marker_lst_alt = []
+            lst2_alt.insert(0, [origin_lat, origin_lon])
+            lst2_alt.append([destination_lat, destination_lon])
+            idx_alt = [i for i in range(len(lst2_alt))]
+            res_alt = {idx_alt[i]: lst2_alt[i] for i in range(len(idx_alt))}
+            point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_many_short(lst2_alt)
+            marker_lst_alt.append("L.marker([{latitude}, {longitude}])".format(latitude=origin_lat,\
+                                                                                        longitude=origin_lon,
+                                                                                                ))
+            marker_lst_alt.append("L.marker([{latitude}, {longitude}])".format(latitude=destination_lat,\
                                                                                         longitude=destination_lon,
                                                                                                 ))  
+                                                                      
 
             return (
                 marker_lst,
@@ -1265,4 +1452,19 @@ def process_inputs_nonight(
                 res,
                 last_leg,
                 night_travel,
-                time_end)      
+                time_end,
+                marker_lst_alt,
+                    markers_alt,
+                    mid_lat,
+                    mid_lon,
+                    point_list_alt_1,
+                    distance_alt_1,
+                    time_alt_1,
+                    initial_soc,
+                    final_threshold,
+                    start_time,
+                    lst_alt_1,
+                    res_alt,
+                    last_leg_alt,
+                    night_travel_alt,
+                    time_end_alt )      
