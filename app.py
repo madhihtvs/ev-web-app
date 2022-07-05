@@ -180,7 +180,6 @@ def ownrest():
                 time_end,
                 last_leg2,
                 rest_charge_last_leg,
-
                 marker_lst_alt,
                 markers_alt,
                 mid_lat,
@@ -339,9 +338,8 @@ def userchoice():
                 last_leg,
                 night_travel,
                 time_end,
-                
                  marker_lst_alt,
-                        markers_alt,
+                    markers_alt,
                         mid_lat,
                         mid_lon,
                         point_list_alt_1,
@@ -354,7 +352,7 @@ def userchoice():
                         res_alt,
                         last_leg_alt,
                         night_travel_alt,
-                        time_end_alt
+                        time_end_alt,
 
         ) = preprocessing.process_inputs_nonight(
             start_point=start_point,
