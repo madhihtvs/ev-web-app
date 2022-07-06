@@ -29,11 +29,12 @@ def get_address(lat, lon):
     return address
     
 
-def get_POI(lat, lon):
+def get_POI(lat, lon, radius):
+
     url = "https://api.geoapify.com/v2/places"
     params = dict(
         categories='entertainment,catering,commercial,leisure,tourism',
-        filter=f'circle:{lon},{lat},5000',
+        filter=f'circle:{lon},{lat},{radius}',
         bias=f'proximity:{lon},{lat}',
         limit=20,
         apiKey='af361475cd624479ab85363a1893eab1'
