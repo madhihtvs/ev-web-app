@@ -24,6 +24,7 @@ def home():
             start_time,
             intermediate_points,
             poi_radius,
+            range_ev
         ) = preprocessing.collect_user_inputs(request.values)
         try:
             (
@@ -67,6 +68,7 @@ def home():
                 start_time=start_time,
                 intermediate_points=intermediate_points,
                 poi_radius=poi_radius,
+                range_ev = range_ev
             )
         except:
             incomplete = preprocessing.process_inputs(
@@ -77,6 +79,7 @@ def home():
                 start_time=start_time,
                 intermediate_points=intermediate_points,
                 poi_radius=poi_radius,
+                range_ev = range_ev
                 )
 
             if incomplete is None:
@@ -91,6 +94,7 @@ def home():
         session["start-time"] = start_time
         session["poi-radius"] = poi_radius
         session["intermediate-points"] = intermediate_points
+        session["range-ev"] = range_ev
         
 
         session["marker_lst"] = json.dumps(marker_lst)
@@ -180,6 +184,8 @@ def ownrest():
     range_start = session.get("range-start")
     range_arrival = session.get("range-arrival")
     start_time = session.get("start-time")
+    range_ev = session.get("range-ev")
+
     try:
         (
                     marker_lst,
@@ -226,6 +232,7 @@ def ownrest():
                 range_arrival=range_arrival,
                 start_time=start_time,
                 total_distance = total_distance,
+                range_ev = range_ev,
             
                 )
     except:
@@ -238,6 +245,7 @@ def ownrest():
                 range_arrival=range_arrival,
                 start_time=start_time,
                 total_distance = total_distance,
+                range_ev = range_ev,
             
                 )
             if incomplete is None:
@@ -330,8 +338,11 @@ def userchoice():
 
     if clicked == 3:
         session["night_travel"] = 'false'
+        session["night_travel_alt"] = 'false'
+
+        
         return render_template(
-        "option3.html",
+        "results.html",
         marker_lst = session.get("marker_lst"),
         markers=session.get("markers"),
         lat=session.get("mid_lat"),
@@ -346,7 +357,24 @@ def userchoice():
         lst=session.get("lst"),
         details=session.get("details"),
         night_travel = session.get("night_travel"),
-        time_end = session.get("time_end")
+        time_end = session.get("time_end"),
+        
+        marker_lst_alt = session.get("marker_lst_alt"),
+        markers_alt=session.get("markers_alt"),
+        lat_alt=session.get("mid_lat"),
+        lon_alt=session.get("mid_lon"),
+        pointList_alt=session.get("pointList_alt_1"),
+        last_leg_alt=session.get("last_leg_alt"),
+        distance_alt=session.get("distance_alt_1"),
+        time_alt=session.get("time_alt_1"),
+        intial_soc_alt=session.get("initial_soc"),
+        final_threshold_alt=session.get("final_threshold"),
+        trip_start_at_alt=session.get("trip_start_at"),
+        lst_alt=session.get("lst_alt"),
+        details_alt=session.get("details_alt"),
+        night_travel_alt = session.get("night_travel_alt"),
+        time_end_alt = session.get("time_end_alt")
+        
     )
 
     elif clicked == 2:
@@ -360,48 +388,68 @@ def userchoice():
         start_time = session.get("start-time")
         poi_radius = session.get("poi-radius")
         intermediate_points = session.get("intermediate-points")
+        range_ev = session.get("range-ev")
 
-        (
-                marker_lst,
-                markers,
-                mid_lat,
-                mid_lon,
-                point_list,
-                distance,
-                time,
-                initial_soc,
-                final_threshold,
-                start_time,
-                lst,
-                res,
-                last_leg,
-                night_travel,
-                time_end,
-                 marker_lst_alt,
-                    markers_alt,
-                        mid_lat,
-                        mid_lon,
-                        point_list_alt_1,
-                        distance_alt_1,
-                        time_alt_1,
-                        initial_soc,
-                        final_threshold,
-                        start_time,
-                        lst_alt_1,
-                        res_alt,
-                        last_leg_alt,
-                        night_travel_alt,
-                        time_end_alt,
+        try:
+            (
+                    marker_lst,
+                    markers,
+                    mid_lat,
+                    mid_lon,
+                    point_list,
+                    distance,
+                    time,
+                    initial_soc,
+                    final_threshold,
+                    start_time,
+                    lst,
+                    res,
+                    last_leg,
+                    night_travel,
+                    time_end,
+                    marker_lst_alt,
+                        markers_alt,
+                            mid_lat,
+                            mid_lon,
+                            point_list_alt_1,
+                            distance_alt_1,
+                            time_alt_1,
+                            initial_soc,
+                            final_threshold,
+                            start_time,
+                            lst_alt_1,
+                            res_alt,
+                            last_leg_alt,
+                            night_travel_alt,
+                            time_end_alt,
 
-        ) = preprocessing.process_inputs_nonight(
-            start_point=start_point,
-            end_point=end_point,
-            intermediate_points = intermediate_points,
-            range_start=range_start,
-            range_arrival=range_arrival,
-            start_time=start_time,
-            poi_radius=poi_radius,
-        )
+            ) = preprocessing.process_inputs_nonight(
+                start_point=start_point,
+                end_point=end_point,
+                intermediate_points = intermediate_points,
+                range_start=range_start,
+                range_arrival=range_arrival,
+                start_time=start_time,
+                poi_radius=poi_radius,
+                range_ev = range_ev,
+            )
+
+        except:
+            incomplete = preprocessing.process_inputs_nonight(
+                start_point=start_point,
+                end_point=end_point,
+                intermediate_points = intermediate_points,
+                range_start=range_start,
+                range_arrival=range_arrival,
+                start_time=start_time,
+                poi_radius=poi_radius,
+                range_ev = range_ev,
+            
+                )
+            if incomplete is None:
+                print("Unable")
+                return render_template("error.html")
+
         session_no_night["marker_lst"] = json.dumps(marker_lst)
         session_no_night["markers"] = markers
         session_no_night["mid_lat"] = mid_lat
