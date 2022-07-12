@@ -39,6 +39,7 @@ def get_sec(time_str):
 def charge_and_go(df, initial_soc, min_threshold, total_distance, dist_travelled, range_ev, stop, final_threshold, range_needed,
 ave_speed, trip_start_at, trip_start, total_time):
     try:
+        
         dist_left = total_distance - dist_travelled
         night_travel = False
         possible_range = (100 - min_threshold)/100 * range_ev
@@ -229,202 +230,29 @@ ave_speed, trip_start_at, trip_start, total_time):
 
 def no_night(df, initial_soc, min_threshold, total_distance, dist_travelled, range_ev, stop, final_threshold, range_needed,
 ave_speed, trip_start_at, trip_start, total_time):
-    dist_left = total_distance - dist_travelled
-
-    possible_range = (100 - min_threshold)/100 * range_ev
-
-    while dist_left > 0:
-        if initial_soc < min_threshold:
-            print("Vehicle is unable to travel safely")
-            break
-        
-        
-        possible_dist = min(dist_left, range_ev/100 * (initial_soc-min_threshold))
-        dist_travelled += possible_dist
-        dist_travelled = min(total_distance, dist_travelled)
+    try:
         dist_left = total_distance - dist_travelled
 
-        if dist_left <= 0.0:
-            soc_reduction = possible_dist / (range_ev/100)
-            print("No More Stops, Final Lap")
-            print("Starting SoC:", new_soc, "%")
-            print(f"Distance Travelled in Total: {dist_travelled} km")
-            print("Travelling", possible_dist, "km now")
-                    
-            print("Current SoC:", new_soc - soc_reduction, "%")
+        possible_range = (100 - min_threshold)/100 * range_ev
 
-            yield [new_soc, possible_dist, new_soc - soc_reduction]
-
-            dist_left = dist_left - dist_left
-            print("Trip Duration:",total_time/3600, "hrs")
-            sec = get_sec(trip_start) + total_time
-            td = timedelta(seconds=sec)
-            print("Trip End:",td )
-
-            yield [sec, False , new_soc - soc_reduction]
-            print("Reached Destination:", dist_left, "km left")
-            break
-       
-        df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
-
-        while len(df_1) < 1:
-            
-            dist_travelled += 0.5
-            dist_left -= 0.5
-            df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
-
-        df_1.sort_values(by = ['Distance_to_CS'])
-        idx = df_1.index[0]
-        a = [idx,df_1.iloc[0]["Name_Charging_Station"],df_1.iloc[0]["Lat_CS"],df_1.iloc[0]["Lng_CS"],df_1.iloc[0]["Distance_to_CS"]]
-        new_soc = charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[0]
- 
-        
-        while df_1.iloc[0]['Distance_to_CS'] > 0.5:
-            dist_travelled = dist_travelled - 1
-            possible_dist -= 1
-            dist_left = dist_left + 1
-            df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
-            df_1.sort_values(by = ['Distance_to_CS'])
-            idx = df_1.index[0]
-            a = [idx,df_1.iloc[0]["Name_Charging_Station"],df_1.iloc[0]["Lat_CS"],df_1.iloc[0]["Lng_CS"],df_1.iloc[0]["Distance_to_CS"]]
-            
-
-
-        if dist_left <= possible_dist:
-
-            
-            #dist_travelled += dist_left
-            #dist_left = 0
-            soc_reduction = dist_left / (range_ev/100)
-            #Checking if safe for travel, if not recharge
-            new_soc = initial_soc - (possible_dist/ (range_ev/100))
-            if new_soc - soc_reduction < min_threshold:
-            
-                    
-                range_needed = range_ev/100 * (final_threshold - min_threshold)
-
-                b = min(initial_soc - (possible_dist/ (range_ev/100)) + charging_time(dist_left+range_needed, min_threshold)[0],100)
-
-                print("Starting SoC: ", initial_soc, "%")
-                print("Current SoC:", initial_soc - (possible_dist/ (range_ev/100)), "%")
-                print("Leg Start:", trip_start)
-                leg_end = timedelta(seconds= (get_sec(trip_start) + (possible_dist/ave_speed * 3600)))
-           
-                print("Leg End:",str(leg_end))
-                print("Stop:", stop)
-                print("Distance Travelled in Total:", dist_travelled, "km")
-                print("Distance Travelled before this Stop:", possible_dist, "km")
-
-                    
-                    
-                if len(str(leg_end).split(".", 1)[0]) < 8:
-                    if "02:00:00" <= "0" + str(leg_end).split(".", 1)[0] <= "06:00:00":
-                        print("Charge at:", a)
-                        print("Charging Start Time:", str(leg_end).split(".", 1)[0])
-                        print("Charging Time:", charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
-                        time_end = get_sec(str(leg_end)) + charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                        time_end = timedelta(seconds = time_end)
-                        print("Charging End Time:", str(time_end))
-                        print("Distance Left:", total_distance - dist_travelled, "km")
-                        total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                        print("Total Time:", total_time/3600)
-                        new_soc = 100
-                        print("Updated Charge:",new_soc, "%")
-            
-                        b = new_soc
-                        print("*************")
-                        yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],b]
-
-
-
-                    else:
-
-                        print("Charge at:",a)
-                        print("Charging Start Time:", str(leg_end).split(".", 1)[0])
-                        print("Charging Time:", charging_time(dist_left+range_needed, min_threshold)[1], "hrs")
-                        time_end = get_sec(str(leg_end)) + charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                        time_end = timedelta(seconds = time_end)
-                        print("Charging End Time:", str(time_end))
-                        print("Distance Left:", total_distance - dist_travelled, "km")
-                        total_time += charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                         
-                        print("Updated Charge:",b, "%")
-               
-                        b = new_soc
-                        print("*************")
-                        yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b]
-                        
-
-
-        
-                elif len(str(leg_end).split(".", 1)[0]) == 8:
-                    if "02:00:00" <= str(leg_end).split(".", 1)[0] <= "06:00:00":
-
-
-                        print("Charge at:", a)
-                        print("Charging Start Time:", str(leg_end).split(".", 1)[0])
-                        print("Charging Time:", charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
-                        time_end = get_sec(str(leg_end)) + charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                        time_end = timedelta(seconds = time_end)
-                        print("Charging End Time:", str(time_end))
-                        print("Distance Left:", total_distance - dist_travelled, "km")
-                        total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                        print("Total Time:", total_time/3600)
-                        new_soc = 100
-                        print("Updated Charge:",new_soc, "%")
-                
-                        b = new_soc
-                        print("*************")
-
-                        yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],b]
-              
-
-                    else:
-
-                        print("Charge at:",a)
-                        print("Charging Start Time:", str(leg_end).split(".", 1)[0])
-                        print("Charging Time:", charging_time(dist_left+range_needed, min_threshold)[1], "hrs")
-                        time_end = get_sec(str(leg_end)) + charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                        time_end = timedelta(seconds = time_end)
-                        print("Charging End Time:", str(time_end))
-                        print("Distance Left:", total_distance - dist_travelled, "km")
-                        total_time += charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                          
-                        print("Updated Charge:",b, "%")
-            
-                        print("*************")
-                        yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b]
-                
-                                
-
-                print("Travelling", dist_left, "km now")
-                soc_reduction = dist_left / (range_ev/100)
-                print("Leg Start:", str(time_end))
-                leg_end = timedelta(seconds= (get_sec(str(time_end)) + (dist_left/ave_speed * 3600)))
-            
-                print("Leg End:",str(leg_end))                
-                print("Current SoC:", b - soc_reduction, "%")
-                yield [b, dist_left, b-soc_reduction]
-
-                dist_left = dist_left - dist_left
-                print("Trip Duration:",total_time/3600, "hrs")
-                sec = get_sec(trip_start_at) + total_time
-                td = timedelta(seconds=sec)
-                print("Trip End:",td )
-                print("Reached Destination:", dist_left, "km left")
-                     
-                yield [sec, False , b - soc_reduction]
+        while dist_left > 0:
+            if initial_soc < min_threshold:
+                print("Vehicle is unable to travel safely")
                 break
+            
+            
+            possible_dist = min(dist_left, range_ev/100 * (initial_soc-min_threshold))
+            dist_travelled += possible_dist
+            dist_travelled = min(total_distance, dist_travelled)
+            dist_left = total_distance - dist_travelled
 
-        
-
-            else:
-
+            if dist_left <= 0.0:
+                soc_reduction = possible_dist / (range_ev/100)
                 print("No More Stops, Final Lap")
                 print("Starting SoC:", new_soc, "%")
                 print(f"Distance Travelled in Total: {dist_travelled} km")
                 print("Travelling", possible_dist, "km now")
-                    
+                        
                 print("Current SoC:", new_soc - soc_reduction, "%")
 
                 yield [new_soc, possible_dist, new_soc - soc_reduction]
@@ -439,105 +267,281 @@ ave_speed, trip_start_at, trip_start, total_time):
                 print("Reached Destination:", dist_left, "km left")
                 break
         
-        print("Starting SoC: ", initial_soc, "%")
-        print("Current SoC:", initial_soc - (possible_dist/ (range_ev/100)), "%")
-        print("Leg Start:", trip_start)
-        leg_end = timedelta(seconds= (get_sec(trip_start) + (possible_dist/ave_speed * 3600)))
+            df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
 
-        print("Leg End:",str(leg_end))
-        print("Stop:", stop)
-        print("Distance Travelled in Total:", dist_travelled, "km")
-        print("Distance Travelled before this Stop:", possible_dist, "km")
-        
+            while len(df_1) < 1:
+                
+                dist_travelled += 0.5
+                dist_left -= 0.5
+                df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
 
+            df_1.sort_values(by = ['Distance_to_CS'])
+            idx = df_1.index[0]
+            a = [idx,df_1.iloc[0]["Name_Charging_Station"],df_1.iloc[0]["Lat_CS"],df_1.iloc[0]["Lng_CS"],df_1.iloc[0]["Distance_to_CS"]]
+            new_soc = charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[0]
     
+            
+            while df_1.iloc[0]['Distance_to_CS'] > 0.5:
+                dist_travelled = dist_travelled - 1
+                possible_dist -= 1
+                dist_left = dist_left + 1
+                df_1 = df.loc[(df['distance_travelled_till_here'] >=math.floor(dist_travelled) ) & (df['distance_travelled_till_here'] <= math.ceil(dist_travelled+0.5))]
+                df_1.sort_values(by = ['Distance_to_CS'])
+                idx = df_1.index[0]
+                a = [idx,df_1.iloc[0]["Name_Charging_Station"],df_1.iloc[0]["Lat_CS"],df_1.iloc[0]["Lng_CS"],df_1.iloc[0]["Distance_to_CS"]]
+                
 
-        if len(str(leg_end).split(".", 1)[0]) < 8:
-            if "02:00:00" <= "0" + str(leg_end).split(".", 1)[0] <= "06:00:00":
+
+            if dist_left <= possible_dist:
+
+                
+                #dist_travelled += dist_left
+                #dist_left = 0
+                soc_reduction = dist_left / (range_ev/100)
+                #Checking if safe for travel, if not recharge
+                new_soc = initial_soc - (possible_dist/ (range_ev/100))
+                if new_soc - soc_reduction < min_threshold:
+                
+                        
+                    range_needed = range_ev/100 * (final_threshold - min_threshold)
+
+                    b = min(initial_soc - (possible_dist/ (range_ev/100)) + charging_time(dist_left+range_needed, min_threshold)[0],100)
+
+                    print("Starting SoC: ", initial_soc, "%")
+                    print("Current SoC:", initial_soc - (possible_dist/ (range_ev/100)), "%")
+                    print("Leg Start:", trip_start)
+                    leg_end = timedelta(seconds= (get_sec(trip_start) + (possible_dist/ave_speed * 3600)))
+            
+                    print("Leg End:",str(leg_end))
+                    print("Stop:", stop)
+                    print("Distance Travelled in Total:", dist_travelled, "km")
+                    print("Distance Travelled before this Stop:", possible_dist, "km")
+
+                        
+                        
+                    if len(str(leg_end).split(".", 1)[0]) < 8:
+                        if "02:00:00" <= "0" + str(leg_end).split(".", 1)[0] <= "06:00:00":
+                            print("Charge at:", a)
+                            print("Charging Start Time:", str(leg_end).split(".", 1)[0])
+                            print("Charging Time:", charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
+                            time_end = get_sec(str(leg_end)) + charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                            time_end = timedelta(seconds = time_end)
+                            print("Charging End Time:", str(time_end))
+                            print("Distance Left:", total_distance - dist_travelled, "km")
+                            total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                            print("Total Time:", total_time/3600)
+                            new_soc = 100
+                            print("Updated Charge:",new_soc, "%")
+                
+                            b = new_soc
+                            print("*************")
+                            yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],b]
+
+
+
+                        else:
+
+                            print("Charge at:",a)
+                            print("Charging Start Time:", str(leg_end).split(".", 1)[0])
+                            print("Charging Time:", charging_time(dist_left+range_needed, min_threshold)[1], "hrs")
+                            time_end = get_sec(str(leg_end)) + charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                            time_end = timedelta(seconds = time_end)
+                            print("Charging End Time:", str(time_end))
+                            print("Distance Left:", total_distance - dist_travelled, "km")
+                            total_time += charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                            
+                            print("Updated Charge:",b, "%")
+                
+                            b = new_soc
+                            print("*************")
+                            yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b]
+                            
+
+
+            
+                    elif len(str(leg_end).split(".", 1)[0]) == 8:
+                        if "02:00:00" <= str(leg_end).split(".", 1)[0] <= "06:00:00":
+
+
+                            print("Charge at:", a)
+                            print("Charging Start Time:", str(leg_end).split(".", 1)[0])
+                            print("Charging Time:", charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
+                            time_end = get_sec(str(leg_end)) + charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                            time_end = timedelta(seconds = time_end)
+                            print("Charging End Time:", str(time_end))
+                            print("Distance Left:", total_distance - dist_travelled, "km")
+                            total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                            print("Total Time:", total_time/3600)
+                            new_soc = 100
+                            print("Updated Charge:",new_soc, "%")
+                    
+                            b = new_soc
+                            print("*************")
+
+                            yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],b]
+                
+
+                        else:
+
+                            print("Charge at:",a)
+                            print("Charging Start Time:", str(leg_end).split(".", 1)[0])
+                            print("Charging Time:", charging_time(dist_left+range_needed, min_threshold)[1], "hrs")
+                            time_end = get_sec(str(leg_end)) + charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                            time_end = timedelta(seconds = time_end)
+                            print("Charging End Time:", str(time_end))
+                            print("Distance Left:", total_distance - dist_travelled, "km")
+                            total_time += charging_time(dist_left+range_needed, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                            
+                            print("Updated Charge:",b, "%")
+                
+                            print("*************")
+                            yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],b]
+                    
+                                    
+
+                    print("Travelling", dist_left, "km now")
+                    soc_reduction = dist_left / (range_ev/100)
+                    print("Leg Start:", str(time_end))
+                    leg_end = timedelta(seconds= (get_sec(str(time_end)) + (dist_left/ave_speed * 3600)))
+                
+                    print("Leg End:",str(leg_end))                
+                    print("Current SoC:", b - soc_reduction, "%")
+                    yield [b, dist_left, b-soc_reduction]
+
+                    dist_left = dist_left - dist_left
+                    print("Trip Duration:",total_time/3600, "hrs")
+                    sec = get_sec(trip_start_at) + total_time
+                    td = timedelta(seconds=sec)
+                    print("Trip End:",td )
+                    print("Reached Destination:", dist_left, "km left")
+                        
+                    yield [sec, False , b - soc_reduction]
+                    break
+
+            
+
+                else:
+
+                    print("No More Stops, Final Lap")
+                    print("Starting SoC:", new_soc, "%")
+                    print(f"Distance Travelled in Total: {dist_travelled} km")
+                    print("Travelling", possible_dist, "km now")
+                        
+                    print("Current SoC:", new_soc - soc_reduction, "%")
+
+                    yield [new_soc, possible_dist, new_soc - soc_reduction]
+
+                    dist_left = dist_left - dist_left
+                    print("Trip Duration:",total_time/3600, "hrs")
+                    sec = get_sec(trip_start) + total_time
+                    td = timedelta(seconds=sec)
+                    print("Trip End:",td )
+
+                    yield [sec, False , new_soc - soc_reduction]
+                    print("Reached Destination:", dist_left, "km left")
+                    break
+            
+            print("Starting SoC: ", initial_soc, "%")
+            print("Current SoC:", initial_soc - (possible_dist/ (range_ev/100)), "%")
+            print("Leg Start:", trip_start)
+            leg_end = timedelta(seconds= (get_sec(trip_start) + (possible_dist/ave_speed * 3600)))
+
+            print("Leg End:",str(leg_end))
+            print("Stop:", stop)
+            print("Distance Travelled in Total:", dist_travelled, "km")
+            print("Distance Travelled before this Stop:", possible_dist, "km")
+            
+
         
-                print("Charge at:", a)
-                print("Charging Start Time:", str(leg_end).split(".", 1)[0])
-                print("Charging Time:", charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
-                time_end = get_sec(str(leg_end)) + charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                time_end = timedelta(seconds = time_end)
-                print("Charging End Time:", str(time_end))
-                print("Distance Left:", total_distance - dist_travelled, "km")
-                total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                print("Total Time:", total_time/3600)
-                new_soc = 100
-                print("Updated Charge:",new_soc, "%")
 
-                print("*************")
-                
-                yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],new_soc ]
+            if len(str(leg_end).split(".", 1)[0]) < 8:
+                if "02:00:00" <= "0" + str(leg_end).split(".", 1)[0] <= "06:00:00":
+            
+                    print("Charge at:", a)
+                    print("Charging Start Time:", str(leg_end).split(".", 1)[0])
+                    print("Charging Time:", charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
+                    time_end = get_sec(str(leg_end)) + charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                    time_end = timedelta(seconds = time_end)
+                    print("Charging End Time:", str(time_end))
+                    print("Distance Left:", total_distance - dist_travelled, "km")
+                    total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                    print("Total Time:", total_time/3600)
+                    new_soc = 100
+                    print("Updated Charge:",new_soc, "%")
 
-                
+                    print("*************")
+                    
+                    yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],new_soc ]
 
-                
+                    
 
-            else:
-                print("Charge at:", a)
-                print("Charging Start Time:", str(leg_end).split(".", 1)[0])
-                print("Charging Time:", charging_time(dist_left,initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
-                time_end = get_sec(str(leg_end)) + charging_time(dist_left, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                time_end = timedelta(seconds = time_end)
-                print("Charging End Time:", str(time_end))
-                print("Distance Left:", total_distance - dist_travelled, "km")
-                total_time += charging_time(dist_left, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                print("Total Time:", total_time/3600)
-                print("Updated Charge:",new_soc, "%")
+                    
 
-                print("*************")
+                else:
+                    print("Charge at:", a)
+                    print("Charging Start Time:", str(leg_end).split(".", 1)[0])
+                    print("Charging Time:", charging_time(dist_left,initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
+                    time_end = get_sec(str(leg_end)) + charging_time(dist_left, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                    time_end = timedelta(seconds = time_end)
+                    print("Charging End Time:", str(time_end))
+                    print("Distance Left:", total_distance - dist_travelled, "km")
+                    total_time += charging_time(dist_left, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                    print("Total Time:", total_time/3600)
+                    print("Updated Charge:",new_soc, "%")
 
-                yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],new_soc ]
+                    print("*************")
+
+                    yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],new_soc ]
+        
+
+            
+            elif len(str(leg_end)).split(".", 1)[0] == 8:
+                if "02:00:00" <= str(leg_end).split(".", 1)[0] <= "06:00:00":
+
+                    
+                    print("Charge at:", a)
+                    print("Charging Start Time:", str(leg_end).split(".", 1)[0])
+                    print("Charging Time:", charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
+                    time_end = get_sec(str(leg_end)) + charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                    time_end = timedelta(seconds = time_end)
+                    print("Charging End Time:", str(time_end))
+                    print("Distance Left:", total_distance - dist_travelled, "km")
+                    total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                    print("Total Time:", total_time/3600)
+                    new_soc = 100
+                    print("Updated Charge:",new_soc, "%")
+                    print("*************")
+
+                    yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],new_soc ]
+
+
+                else:
+
+                    print("Charge at:", a)
+                    print("Charging Start Time:", str(leg_end).split(".", 1)[0])
+                    print("Charging Time:", charging_time(dist_left,initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
+                    time_end = get_sec(str(leg_end)) + charging_time(dist_left, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                    time_end = timedelta(seconds = time_end)
+                    print("Charging End Time:", str(time_end))
+                    print("Distance Left:", total_distance - dist_travelled, "km")
+                    total_time += charging_time(dist_left, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+                    print("Total Time:", total_time/3600)
+                    print("Updated Charge:",new_soc, "%")
+
+                    print("*************")
+
+                    yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],new_soc ]
+
+
+
+            total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
+            initial_soc = new_soc
+            stop += 1
+
+            trip_start = str(time_end)
+    except:
+        return("Trip cannot be completed as no charging station is available in the vicinity")
     
-
-        
-        elif len(str(leg_end)).split(".", 1)[0] == 8:
-            if "02:00:00" <= str(leg_end).split(".", 1)[0] <= "06:00:00":
-
-                
-                print("Charge at:", a)
-                print("Charging Start Time:", str(leg_end).split(".", 1)[0])
-                print("Charging Time:", charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
-                time_end = get_sec(str(leg_end)) + charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                time_end = timedelta(seconds = time_end)
-                print("Charging End Time:", str(time_end))
-                print("Distance Left:", total_distance - dist_travelled, "km")
-                total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                print("Total Time:", total_time/3600)
-                new_soc = 100
-                print("Updated Charge:",new_soc, "%")
-                print("*************")
-
-                yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1],new_soc ]
-
-
-            else:
-
-                print("Charge at:", a)
-                print("Charging Start Time:", str(leg_end).split(".", 1)[0])
-                print("Charging Time:", charging_time(dist_left,initial_soc - (possible_dist/ (range_ev/100)))[1], "hrs")
-                time_end = get_sec(str(leg_end)) + charging_time(dist_left, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                time_end = timedelta(seconds = time_end)
-                print("Charging End Time:", str(time_end))
-                print("Distance Left:", total_distance - dist_travelled, "km")
-                total_time += charging_time(dist_left, initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-                print("Total Time:", total_time/3600)
-                print("Updated Charge:",new_soc, "%")
-
-                print("*************")
-
-                yield [initial_soc, possible_dist, a[2], a[3], initial_soc - (possible_dist/ (range_ev/100)),charging_time(dist_left+range_needed, min_threshold)[1],new_soc ]
-
-
-
-        total_time += charging_full(initial_soc - (possible_dist/ (range_ev/100)))[1] * 3600
-        initial_soc = new_soc
-        stop += 1
-
-        trip_start = str(time_end)
-
 
 def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, range_ev, stop, final_threshold, range_needed,
     ave_speed, trip_start_at, trip_start, total_time, rest_lat, rest_lon,distance_travelled_by_rest_place, df_complete): 
@@ -759,6 +763,7 @@ def own_rest(df, initial_soc, min_threshold, total_distance, dist_travelled, ran
                 except IndexError:
                     print("Possible Distance:", dist_travelled)
                     print("Total Distance:", total_distance)
+                    print("Trip cannot be completed as no charging station is available in the vicinity")
                     yield "Trip cannot be completed as no charging station is available in the vicinity"
                     return("Trip cannot be completed as no charging station is available in the vicinity")
                     
@@ -818,8 +823,11 @@ def station_coordinates_no_night(df, initial_soc, min_threshold, total_distance,
         stop = 1
         for value in no_night(df, initial_soc, min_threshold, total_distance, 
         dist_travelled, range_ev, stop, final_threshold, range_needed, ave_speed, trip_start_at, trip_start, total_time): 
-            lst[stop] = value
-            stop += 1
+            if type(value) == str:
+                return "Trip cannot be completed as no charging station is available in the vicinity" 
+            else:
+                lst[stop] = value
+                stop += 1
 
     return lst
 
@@ -828,7 +836,7 @@ def station_coordinates_no_night(df, initial_soc, min_threshold, total_distance,
 def station_coordinates_own_rest(df, initial_soc, min_threshold, total_distance, 
     dist_travelled, range_ev, stop, final_threshold, range_needed, ave_speed, trip_start_at, trip_start, total_time,
     rest_lat, rest_lon,distance_travelled_by_rest_place, df_complete):
-
+    
     possible_range = (initial_soc - min_threshold)/100 * range_ev
     lst = {}
     if possible_range >= total_distance:
