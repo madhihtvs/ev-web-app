@@ -189,8 +189,11 @@
       let charging_time2 = document.createTextNode('Total Charging Duration: ' + secondsToHms(total_time - chargetotal) + ', ');
       card.appendChild(charging_time2);
 
-      let description = document.createTextNode('Total Distance: ' + {{distance}} + ' km');
+      let description = document.createTextNode('Total Distance: ' + {{distance}} + ' km, ');
       card.appendChild(description);
+
+      let time_trip_alone = document.createTextNode('Total Trip Duration without Charging: ' + secondsToHms({{time}}));
+      card.appendChild(time_trip_alone);
 
       let container = document.querySelector("#container2");
       container.appendChild(card);
@@ -326,8 +329,11 @@
                 let charging_time2 = document.createTextNode('Total Charging Duration: ' + secondsToHms(total_time - chargetotal) + ', ');
                 card.appendChild(charging_time2);
 
-                let description = document.createTextNode('Total Distance: ' + {{distance}} + ' km');
+                let description = document.createTextNode('Total Distance: ' + {{distance}} + ' km, ');
                 card.appendChild(description);
+
+                let time_trip_alone = document.createTextNode('Total Trip Duration without Charging: ' + secondsToHms({{time}}));
+                card.appendChild(time_trip_alone);
 
                 let container = document.querySelector("#container2");
                 container.appendChild(card);
@@ -443,8 +449,11 @@
           let charging_time2 = document.createTextNode('Total Charging Duration: ' + secondsToHms(total_time - chargetotal) + ', ');
           card.appendChild(charging_time2);
 
-          let description = document.createTextNode('Total Distance: ' + {{distance_alt}} + ' km');
+          let description = document.createTextNode('Total Distance: ' + {{distance_alt}} + ' km, ');
           card.appendChild(description);
+
+          let time_trip_alone = document.createTextNode('Total Trip Duration without Charging: ' + secondsToHms({{time_alt}}));
+          card.appendChild(time_trip_alone);
 
           let container = document.querySelector("#container2");
           container.appendChild(card);
