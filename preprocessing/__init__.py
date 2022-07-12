@@ -26,7 +26,8 @@ def collect_user_inputs(request_values):
     start_time = request_values.get("start-time")
     start_time = f"{start_time}:00"
     poi_radius = request_values.get("poi-radius")
-    return start_point, end_point, range_start, range_arrival, start_time, intermediate_points, poi_radius
+    range_ev = request_values.get("range-ev")
+    return start_point, end_point, range_start, range_arrival, start_time, intermediate_points, poi_radius, range_ev
 
 def search_input(request_values):
     search_point = request_values.get("search-point")
@@ -136,9 +137,12 @@ def process_inputs_own_rest(
     start_time: str,
     intermediate_points: list,
     total_distance: float,
+    range_ev: float,
     bng_dat_path: str = "./resources/bng_df.csv",
 
 ):  
+
+    range_ev = float(range_ev)
     origin = backend.get_coordinates(start_point)
     origin_lat, origin_lon = get_lat_long_from_coordinates(origin)
 
@@ -234,7 +238,6 @@ def process_inputs_own_rest(
     total_distance = total_distance
     min_threshold = 15
     dist_travelled = 0
-    range_ev = 75
     stop = 1
     range_needed = 0
     ave_speed = 40
@@ -689,9 +692,10 @@ def process_inputs(
     start_time: str,
     intermediate_points: list,
     poi_radius: int,
+    range_ev: float,
     bng_dat_path: str = "./resources/bng_df.csv",
 ):
-    
+    range_ev = float(range_ev)
     origin = backend.get_coordinates(start_point)
     origin_lat, origin_lon = get_lat_long_from_coordinates(origin)
 
@@ -773,7 +777,6 @@ def process_inputs(
     total_distance = distance
     min_threshold = 15
     dist_travelled = 0
-    range_ev = 75
     stop = 1
     range_needed = 0
     ave_speed = 40
@@ -1175,8 +1178,10 @@ def process_inputs_nonight(
     start_time: str,
     intermediate_points: list,
     poi_radius: int,
+    range_ev: float,
     bng_dat_path: str = "./resources/bng_df.csv",
-):
+):  
+    range_ev = float(range_ev)
     origin = backend.get_coordinates(start_point)
     origin_lat, origin_lon = get_lat_long_from_coordinates(origin)
 
@@ -1255,7 +1260,7 @@ def process_inputs_nonight(
     total_distance = distance
     min_threshold = 15
     dist_travelled = 0
-    range_ev = 75
+
     stop = 1
     range_needed = 0
     ave_speed = 40
@@ -1293,6 +1298,9 @@ def process_inputs_nonight(
         total_time,
     )
     
+    if lst == "Trip cannot be completed as no charging station is available in the vicinity":
+        return None
+
 
     if type(lst) == str:
         night_travel = False
