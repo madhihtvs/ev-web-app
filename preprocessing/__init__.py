@@ -9,7 +9,9 @@ import preprocessing.backend as backend
 import preprocessing.battery as battery
 import preprocessing.clustering as clustering
 
+
 def _get_intermediate_points(request_values):
+    """Collecting intermediate points from user input if there are any"""
     intermediate_points = []
     keys = request_values.keys()
     matching = list(filter(lambda s: 'intermediate' in s, keys))
@@ -18,6 +20,7 @@ def _get_intermediate_points(request_values):
     return intermediate_points
 
 def collect_user_inputs(request_values):
+    """Collecting values from user input and storing it as separate variables for use later"""
     start_point = request_values.get("start-point")
     end_point = request_values.get("end-point")
     intermediate_points = _get_intermediate_points(request_values)
@@ -30,12 +33,15 @@ def collect_user_inputs(request_values):
     return start_point, end_point, range_start, range_arrival, start_time, intermediate_points, poi_radius, range_ev
 
 def search_input(request_values):
+    """Collecting values from user input for search tab function (Not in use)"""
     search_point = request_values.get("search-point")
     return search_point
 
 def get_nearest_charging_stations(
     search_point: List[Tuple[float, float]], bng_dat_path: str = "./resources/bng_df.csv"
     ) -> pd.DataFrame: 
+
+    """Function find nearest charging stations given a point (Not in use)"""
 
     stations = pd.read_csv(bng_dat_path)
     nearest_df = clustering.nearest_charging_stations(search_point, stations)
@@ -45,6 +51,7 @@ def get_nearest_charging_stations(
 def get_lat_long_from_coordinates(
     coordinates: Dict[str, object]
 ) -> Tuple[float, float]:
+    """Function to get latitude and longitude from the geojson object that is received from the API call"""
     try:
         lon = coordinates["features"][0]["geometry"]["coordinates"][0]
         lat = coordinates["features"][0]["geometry"]["coordinates"][1]
@@ -58,6 +65,7 @@ def get_markers(
 ) -> str:
     orig_address = backend.get_address(origin_lat, origin_lon)
     dest_address = backend.get_address(destination_lat, destination_lon)
+    """Function to create a marker list to include marker positions of origin and destination"""
     
     markers = ""
     markers += "var {idd} = L.marker([{latitude}, {longitude}]);\
@@ -81,6 +89,7 @@ def get_markers(
 
 
 def get_markers_intermediate(markers, lst):
+    """Function to add intermediate markers to existing list of markers"""
     markers += "var {idd} = L.marker([{latitude}, {longitude}]);\
                                 {idd}.addTo(map);".format(
         idd=f"intermediate{lst[0]+1}",
@@ -92,6 +101,7 @@ def get_markers_intermediate(markers, lst):
 
 
 def compute_midpoint(lat1, lon1, lat2, lon2) -> Tuple[float, float]:
+    """Computing midpoint of origin and desination"""
     return (lat1 + lat2) / 2, (lon1 + lon2) / 2
 
 
@@ -106,6 +116,7 @@ def get_stations_data(
     
 ) -> pd.DataFrame:
     path = pd.DataFrame(point_list, columns=["lat", "lng"])
+    """Function to get the stations nearby path coordinates"""
 
     stations = pd.read_csv(bng_dat_path)
     stations = clustering.dimension_reduction(path, origin_lat, origin_lon, dest_lat, dest_lon, stations)
@@ -122,6 +133,8 @@ def get_clustering_data(
     
 ) -> pd.DataFrame:
     path = pd.DataFrame(point_list, columns=["lat", "lng"])
+
+    """Function to clustering stations near path"""
 
     # stations = pd.read_csv(bng_dat_path)
     # stations = clustering.dimension_reduction(path, origin_lat, origin_lon, dest_lat, dest_lon, stations)
@@ -141,97 +154,103 @@ def process_inputs_own_rest(
     bng_dat_path: str = "./resources/bng_df.csv",
 
 ):  
+    """Function to process inputs to find optimal charging stations where user has provided a rest input"""
 
-    range_ev = float(range_ev)
-    origin = backend.get_coordinates(start_point)
-    origin_lat, origin_lon = get_lat_long_from_coordinates(origin)
+    range_ev = float(range_ev) #Converting string input of range_ev to float
+    origin = backend.get_coordinates(start_point) # Getting coordinates from address input, origin
+    origin_lat, origin_lon = get_lat_long_from_coordinates(origin) # Getting latitude and longitude from address
 
-    rest_place = backend.get_coordinates(rest_point)
-    rest_lat, rest_lon = get_lat_long_from_coordinates(rest_place)
+    rest_place = backend.get_coordinates(rest_point) # Getting coordinates from address input, rest place
+    rest_lat, rest_lon = get_lat_long_from_coordinates(rest_place) # Getting latitude and longitude from address
 
-    accom_lat, accom_lon = rest_lat, rest_lon
+    accom_lat, accom_lon = rest_lat, rest_lon # Storing the place that the user wants to rest as accom_lat and accom_lon
 
-    destination = backend.get_coordinates(end_point)
-    destination_lat, destination_lon = get_lat_long_from_coordinates(destination)
+    destination = backend.get_coordinates(end_point) # Getting coordinates from address input, destination
+    destination_lat, destination_lon = get_lat_long_from_coordinates(destination) # Getting latitude and longitude from address
 
-    intermediate_points_coords = []
+    intermediate_points_coords = [] # Empty list to store intermediate points 
     
-    for i in range(len(intermediate_points)):
-        location = intermediate_points[i]
-        coords = backend.get_coordinates(location)
-        intermediate_lat, intermediate_lon = get_lat_long_from_coordinates(coords)
-        intermediate_points_coords.append([i, intermediate_lat, intermediate_lon])
+    for i in range(len(intermediate_points)): # For loop to get coordinates of intermediate points if there are any
+        location = intermediate_points[i] # Accessing an intermediate point 
+        coords = backend.get_coordinates(location) # Getting coordinates from address input, intermediate point
+        intermediate_lat, intermediate_lon = get_lat_long_from_coordinates(coords) # Getting latitude and longitude from address
+        intermediate_points_coords.append([i, intermediate_lat, intermediate_lon]) # Storing intermediate points in list
     
     
-    closest_df = clustering.near_points([[rest_lat, rest_lon]], stations = pd.read_csv('./resources/bng_df.csv'))
+    closest_df = clustering.near_points([[rest_lat, rest_lon]], stations = pd.read_csv('./resources/bng_df.csv')) # Finding nearest charging station to rest point
 
-    closest_df["lat_lon"] = list(zip(closest_df.Latitude, closest_df.Longitude))
-    near = closest_df.loc[closest_df.Label == "Closest"]
+    closest_df["lat_lon"] = list(zip(closest_df.Latitude, closest_df.Longitude)) # Combining latitude and longitude to single column
+    near = closest_df.loc[closest_df.Label == "Closest"] # Getting the closest points
 
-    point = [[rest_lat,rest_lon]]
+    point = [[rest_lat,rest_lon]] # Creating a 2D array using the rest place coordinates
      
-    dists = near['lat_lon'].apply(lambda x: geodesic(point, x).km)
+    dists = near['lat_lon'].apply(lambda x: geodesic(point, x).km) # Finding the distance between rest place and the nearby charging stations
 
-    closest = near.loc[dists.idxmin()]
+    closest = near.loc[dists.idxmin()] # Finding the shortest distance in the dataframe
 
-    rest_lat, rest_lon = closest["Latitude"], closest["Longitude"]
+    rest_lat, rest_lon = closest["Latitude"], closest["Longitude"] # Replacing rest lat and rest lon to the nearest station coordinates (For path query in API)
 
     
     
 
-    if len(intermediate_points_coords) > 0:
+    if len(intermediate_points_coords) > 0: # If there are intermediate points, add to point list for query later
         points = []
         for i in intermediate_points_coords:
             points.append([i[1],i[2]])
         points.insert(0, [origin_lat, origin_lon])
         points.append([rest_lat, rest_lon])
 
-        point_list, distance_travelled_by_rest_place, time = backend.get_route_many(points)
-        point_list_alt_1, distance_travelled_by_rest_place_alt_1, time_alt_1 = backend.get_route_many_short(points)
+        point_list, distance_travelled_by_rest_place, time = backend.get_route_many(points) # Get route for origin, intermediate points and rest place (Default)
+        point_list_alt_1, distance_travelled_by_rest_place_alt_1, time_alt_1 = backend.get_route_many_short(points) # Get route for origin, intermediate points and rest place (Short)
 
-        points.append([destination_lat, destination_lon])
-        point_list_complete, dist_complete, time_complete = backend.get_route_many(points)
-        point_list_complete_alt, dist_complete_alt, time_complete_alt = backend.get_route_many_short(points)
-    else:
-        points = []
-        points.insert(0, [origin_lat, origin_lon])
+        points.append([destination_lat, destination_lon]) # Adding destination to list of points
+        point_list_complete, dist_complete, time_complete = backend.get_route_many(points)  # Get route for origin, intermediate points, rest place and destination (Default)
+        point_list_complete_alt, dist_complete_alt, time_complete_alt = backend.get_route_many_short(points) # Get route for origin, intermediate points, rest place and destination (Short)
+    else: # Creating points list for query later, when there are no intermediate points
+        points = [] 
+        points.insert(0, [origin_lat, origin_lon]) 
         points.append([rest_lat, rest_lon])
         points.append([destination_lat, destination_lon])
 
-        point_list, distance_travelled_by_rest_place, time = backend.get_route(
+
+        # Get route for origin and rest place (Default)
+        point_list, distance_travelled_by_rest_place, time = backend.get_route( 
             origin_lat, origin_lon, rest_lat, rest_lon
         )
+         # Get route for origin and rest place (Short)
         point_list_alt_1, distance_travelled_by_rest_place_alt_1, time_alt_1 = backend.get_route_short(
             origin_lat, origin_lon, rest_lat, rest_lon
         )
+        # Get route for origin, rest place and destination (Default)
         point_list_complete, dist_complete, time_complete = backend.get_route_many(points)
+        # Get route for origin, rest place and destination (Short)
         point_list_complete_alt, dist_complete_alt, time_complete_alt = backend.get_route_many_short(points)
 
-        point_list_complete, dist_complete, time_complete = backend.get_route_many(points)
-        point_list_complete_alt, dist_complete_alt, time_complete_alt = backend.get_route_many_short(points)
-
-
-  
+    # Getting stations that are near path   
     stations = get_stations_data(point_list, origin_lat, origin_lon, destination_lat, destination_lon, bng_dat_path)
     
-
+    # Creating markers list using origin and destination
     markers = get_markers(origin_lat, origin_lon, destination_lat, destination_lon)
     
+    # Adding intermediate marker positions to marker list
     for i in intermediate_points_coords:
         markers = get_markers_intermediate(markers, i)
 
-    
+    # Computing mid lat and mid lon
     mid_lat, mid_lon = compute_midpoint(
         origin_lat, origin_lon, destination_lat, destination_lon
     )
 
+    # Clustering data for path coordinates till rest place (Default)
     df = get_clustering_data(point_list, origin_lat, origin_lon, destination_lat, destination_lon, stations, bng_dat_path)
+    # Clustering data for path coordinates till rest place (Short)
     df_alt_1 = get_clustering_data(point_list_alt_1, origin_lat, origin_lon, destination_lat, destination_lon,stations, bng_dat_path)
-    
+    # Clustering data for path coordinates till destination (Default)
     df_complete = get_clustering_data(point_list_complete, origin_lat, origin_lon, destination_lat, destination_lon, stations, bng_dat_path)
+     # Clustering data for path coordinates till destination (Short)
     df_complete_alt = get_clustering_data(point_list_complete_alt, origin_lat, origin_lon, destination_lat, destination_lon, stations, bng_dat_path)
     
-
+    # Defining variables required for battery script
     initial_soc = float(range_start)
     final_threshold = float(range_arrival)
     total_time = 0
@@ -243,7 +262,7 @@ def process_inputs_own_rest(
     ave_speed = 40
     trip_start = start_time
 
-    
+    # Runing battery script for own_rest using default path
     lst = battery.station_coordinates_own_rest(
         df, 
         initial_soc, 
@@ -263,6 +282,7 @@ def process_inputs_own_rest(
         distance_travelled_by_rest_place,
         df_complete)
 
+     # Runing battery script for own_rest using shorter path
     lst_alt_1 = battery.station_coordinates_own_rest(
         df_alt_1,
         initial_soc,
@@ -283,9 +303,12 @@ def process_inputs_own_rest(
         df_complete_alt
     )
 
+    # If the trip is incomplete, meaning not enough charging stations, print message and return None
     if lst == "Trip cannot be completed as no charging station is available in the vicinity":
         return None
+    # If the trip can be completed with no charging, it falls under this case since there are no coordinates inserted from script
     if type(lst) == str or type(lst_alt_1) == str:
+            #Data processing of dictionary from battery script to individual variables to be rendered in HTML later
             night_travel = False
             time_end = 0
             if len(intermediate_points_coords) < 1:
@@ -390,6 +413,8 @@ def process_inputs_own_rest(
             rest_charge_last_leg_alt)
 
     else:
+        #Data processing of dictionary from battery script to individual variables to be rendered in HTML later
+
         lstcopy = copy.deepcopy(lst)
         lst = copy.deepcopy(lst[1][0])
 
@@ -695,59 +720,60 @@ def process_inputs(
     range_ev: float,
     bng_dat_path: str = "./resources/bng_df.csv",
 ):
-    range_ev = float(range_ev)
-    origin = backend.get_coordinates(start_point)
-    origin_lat, origin_lon = get_lat_long_from_coordinates(origin)
+    range_ev = float(range_ev) # Converting string input of range_ev to float
+    origin = backend.get_coordinates(start_point) # Getting coordinates from address input, origin
+    origin_lat, origin_lon = get_lat_long_from_coordinates(origin) # Getting latitude and longitude from address
 
-    destination = backend.get_coordinates(end_point)
-    destination_lat, destination_lon = get_lat_long_from_coordinates(destination)
+    destination = backend.get_coordinates(end_point) # Getting coordinates from address input, destination
+    destination_lat, destination_lon = get_lat_long_from_coordinates(destination) # Getting latitude and longitude from address
 
-    intermediate_points_coords = []
+    intermediate_points_coords = [] # Empty list to store intermediate points 
     
-    for i in range(len(intermediate_points)):
-        location = intermediate_points[i]
-        coords = backend.get_coordinates(location)
-        intermediate_lat, intermediate_lon = get_lat_long_from_coordinates(coords)
-        intermediate_points_coords.append([i, intermediate_lat, intermediate_lon])
+    for i in range(len(intermediate_points)):  # For loop to get coordinates of intermediate points if there are any
+        location = intermediate_points[i] # Accessing an intermediate point 
+        coords = backend.get_coordinates(location) # Getting coordinates from address input, intermediate point
+        intermediate_lat, intermediate_lon = get_lat_long_from_coordinates(coords) # Getting latitude and longitude from address
+        intermediate_points_coords.append([i, intermediate_lat, intermediate_lon]) # Storing intermediate points in list
     
-  
+    # Creating markers list using origin and destination
     markers = get_markers(origin_lat, origin_lon, destination_lat, destination_lon)
-
+      # Adding intermediate marker positions to marker list
     for i in intermediate_points_coords:
         markers = get_markers_intermediate(markers, i)
 
-
+    # Computing mid lat and mid lon
     mid_lat, mid_lon = compute_midpoint(
         origin_lat, origin_lon, destination_lat, destination_lon
     )
  
     
     
-
+    # If there are intermediate points, add to point list for query later
     if len(intermediate_points_coords) > 0:
         points = []
         for i in intermediate_points_coords:
             points.append([i[1],i[2]])
         points.insert(0, [origin_lat, origin_lon])
         points.append([destination_lat, destination_lon])
-        point_list, distance, time = backend.get_route_many(points)
-        point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_many_short(points)
+        point_list, distance, time = backend.get_route_many(points) # Get route for origin, intermediate points and destination (Default)
+        point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_many_short(points) # Get route for origin, intermediate points and destination (Short)
 
     else:
 
-
+        # Get route for origin, and destination (Default)
         point_list, distance, time = backend.get_route(
             origin_lat, origin_lon, destination_lat, destination_lon
         )
+        # Get route for origin, and destination (Short)
         point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_short(
             origin_lat, origin_lon, destination_lat, destination_lon
         )
     
     
-    
+     # Getting stations that are near path    
     stations = get_stations_data(point_list, origin_lat, origin_lon, destination_lat, destination_lon, bng_dat_path)
     
-
+    # If there are intermediate points, find the nearest charging stations to be shown on map
     if len(intermediate_points_coords) > 0:
         df_near = pd.DataFrame(columns = ["Station Name","Longitude","Latitude","Label"])
         for i in intermediate_points_coords:
@@ -756,7 +782,7 @@ def process_inputs(
             df = df.drop_duplicates()
             df_near = pd.concat([df_near, df])
         
-    
+        #Adding markers of near charging stations to intermediate points
         for idx, row in df_near.iterrows():
             markers += "var {idd} = L.marker([{latitude}, {longitude}], markerOptions_CS);\
                                     {idd}.addTo(map);".format(
@@ -766,11 +792,12 @@ def process_inputs(
         )
             markers += """{idd}.bindPopup("{data}");""".format(idd=f"charging_near_intermediate_{idx+1}", data = f"Charging Point: {row[0]}")
     
-    
+    # Clustering data for path coordinates till destination (Default)
     df = get_clustering_data(point_list, origin_lat, origin_lon, destination_lat, destination_lon, stations, bng_dat_path)
+    # Clustering data for path coordinates till destination (Short)
     df_alt_1 = get_clustering_data(point_list_alt_1, origin_lat, origin_lon, destination_lat, destination_lon,stations, bng_dat_path)
-    
 
+    # Defining variables required for battery script
     initial_soc = float(range_start)
     final_threshold = float(range_arrival)
     total_time = 0
@@ -782,6 +809,7 @@ def process_inputs(
     ave_speed = 40
     trip_start = start_time
 
+    # Runing battery script for charge and go using default path
     lst = battery.station_coordinates(
         df,
         initial_soc,
@@ -797,7 +825,7 @@ def process_inputs(
         trip_start,
         total_time,
     )
-    
+     # Runing battery script for charge and go using shorter path
     lst_alt_1 = battery.station_coordinates(
         df_alt_1,
         initial_soc,
@@ -814,10 +842,12 @@ def process_inputs(
         total_time,
     )
 
+    # If the trip is incomplete, meaning not enough charging stations, print message and return None
     if lst == "Trip cannot be completed as no charging station is available in the vicinity":
         return None
-
+     # If the trip can be completed with no charging, it falls under this case since there are no coordinates inserted from script
     if type(lst) == str:
+         #Data processing of dictionary from battery script to individual variables to be rendered in HTML later
         night_travel = False
         time_end = 0
 
@@ -918,7 +948,7 @@ def process_inputs(
                     time_end_alt)
 
     else:
-
+         #Data processing of dictionary from battery script to individual variables to be rendered in HTML later
         keys = list(lst.keys())
         time_end = lst[keys[-1]][0]
         night_travel = lst[keys[-1]][1]
@@ -1181,34 +1211,35 @@ def process_inputs_nonight(
     range_ev: float,
     bng_dat_path: str = "./resources/bng_df.csv",
 ):  
-    range_ev = float(range_ev)
-    origin = backend.get_coordinates(start_point)
-    origin_lat, origin_lon = get_lat_long_from_coordinates(origin)
-
-    destination = backend.get_coordinates(end_point)
-    destination_lat, destination_lon = get_lat_long_from_coordinates(destination)
+    range_ev = float(range_ev) # Converting string input of range_ev to float
+    origin = backend.get_coordinates(start_point) # Getting coordinates from address input, origin
+    origin_lat, origin_lon = get_lat_long_from_coordinates(origin) # Getting latitude and longitude from address
 
 
-    intermediate_points_coords = []
+    destination = backend.get_coordinates(end_point) # Getting coordinates from address input, destination
+    destination_lat, destination_lon = get_lat_long_from_coordinates(destination) # Getting latitude and longitude from address
+
+
+    intermediate_points_coords = [] # Empty list to store intermediate points 
     
-    for i in range(len(intermediate_points)):
-        location = intermediate_points[i]
-        coords = backend.get_coordinates(location)
-        intermediate_lat, intermediate_lon = get_lat_long_from_coordinates(coords)
-        intermediate_points_coords.append([i, intermediate_lat, intermediate_lon])
+    for i in range(len(intermediate_points)): # For loop to get coordinates of intermediate points if there are any
+        location = intermediate_points[i] # Accessing an intermediate point 
+        coords = backend.get_coordinates(location) # Getting coordinates from address input, intermediate point
+        intermediate_lat, intermediate_lon = get_lat_long_from_coordinates(coords) # Getting latitude and longitude from address
+        intermediate_points_coords.append([i, intermediate_lat, intermediate_lon]) # Storing intermediate points in list
     
 
-
+    # Creating markers list using origin and destination
     markers = get_markers(origin_lat, origin_lon, destination_lat, destination_lon)
-    
+    # Adding intermediate marker positions to marker list
     for i in intermediate_points_coords:
         markers = get_markers_intermediate(markers, i)
 
-
-    
+    # Computing mid lat and mid lon
     mid_lat, mid_lon = compute_midpoint(
         origin_lat, origin_lon, destination_lat, destination_lon
     )
+    # If there are intermediate points, add to point list for query later
     if len(intermediate_points_coords) > 0:
         points = []
         for i in intermediate_points_coords:
@@ -1219,16 +1250,19 @@ def process_inputs_nonight(
         point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_many_short(points)
 
     else:
+        # Get route for origin, and destination (Default)
         point_list, distance, time = backend.get_route(
             origin_lat, origin_lon, destination_lat, destination_lon
         )
+        # Get route for origin, and destination (Short)
         point_list_alt_1, distance_alt_1, time_alt_1 = backend.get_route_short(
             origin_lat, origin_lon, destination_lat, destination_lon
         )
     
-
+    # Getting stations that are near path   
     stations = get_stations_data(point_list, origin_lat, origin_lon, destination_lat, destination_lon, bng_dat_path)
     
+     # If there are intermediate points, find the nearest charging stations to be shown on map
     if len(intermediate_points_coords) > 0:
         df_near = pd.DataFrame(columns = ["Station Name","Longitude","Latitude","Label"])
         for i in intermediate_points_coords:
@@ -1236,8 +1270,8 @@ def process_inputs_nonight(
             df = clustering.near_points(pt, stations)
             df = df.drop_duplicates()
             df_near = pd.concat([df_near, df])
-        
-    
+
+         #Adding markers of near charging stations to intermediate points 
         for idx, row in df_near.iterrows():
             markers += "var {idd} = L.marker([{latitude}, {longitude}], markerOptions_CS);\
                                     {idd}.addTo(map);".format(
@@ -1248,12 +1282,13 @@ def process_inputs_nonight(
             markers += """{idd}.bindPopup("{data}");""".format(idd=f"charging_near_intermediate_{idx+1}", data = f"Charging Point: {row[0]}")
     
     
-    
+     # Clustering data for path coordinates till destination (Default)
     df = get_clustering_data(point_list,origin_lat, origin_lon, destination_lat, destination_lon, stations, bng_dat_path)
+     # Clustering data for path coordinates till destination (Short)
     df_alt_1 = get_clustering_data(point_list_alt_1, origin_lat, origin_lon, destination_lat, destination_lon,stations, bng_dat_path)
     
 
-
+    # Defining variables required for battery script
     initial_soc = float(range_start)
     final_threshold = float(range_arrival)
     total_time = 0
@@ -1266,6 +1301,7 @@ def process_inputs_nonight(
     ave_speed = 40
     trip_start = start_time
 
+    # Runing battery script for charge and go using default path
     lst = battery.station_coordinates_no_night(
         df,
         initial_soc,
@@ -1281,7 +1317,7 @@ def process_inputs_nonight(
         trip_start,
         total_time,
     )
-
+    # Runing battery script for charge and go using shorter path
     lst_alt_1 = battery.station_coordinates_no_night(
         df_alt_1,
         initial_soc,
@@ -1297,12 +1333,14 @@ def process_inputs_nonight(
         trip_start,
         total_time,
     )
-    
+
+    # If the trip is incomplete, meaning not enough charging stations, print message and return None
     if lst == "Trip cannot be completed as no charging station is available in the vicinity":
         return None
 
-
+    # If the trip can be completed with no charging, it falls under this case since there are no coordinates inserted from script
     if type(lst) == str:
+        #Data processing of dictionary from battery script to individual variables to be rendered in HTML later
         night_travel = False
         time_end = 0
 
@@ -1402,6 +1440,7 @@ def process_inputs_nonight(
                     time_end_alt)
 
     else:
+         #Data processing of dictionary from battery script to individual variables to be rendered in HTML later
         keys = list(lst.keys())
         time_end = lst[keys[-1]][0]
         night_travel = lst[keys[-1]][1]
