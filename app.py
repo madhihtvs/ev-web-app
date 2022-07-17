@@ -6,15 +6,17 @@ import preprocessing
 
 app = Flask(__name__)
 
+#To store session data and retrieve based on key
 session = {}
 
 session_no_night = {}
 
 session_own_rest = {}
 
-
+# Default method of finding optimal charging stations
 @app.route("/", methods=["GET", "POST"])
 def home():
+    # getting user input values 
     if request.method == "POST":
         (
             start_point,
@@ -26,6 +28,7 @@ def home():
             poi_radius,
             range_ev
         ) = preprocessing.collect_user_inputs(request.values)
+        # processing inputs (Charge and Go) and returning variables for rendering 
         try:
             (
                             marker_lst,
@@ -71,6 +74,7 @@ def home():
                 range_ev = range_ev
             )
         except:
+            # if there is any error likely due to lack of charging stations, redirected to error page
             incomplete = preprocessing.process_inputs(
                 start_point=start_point,
                 end_point=end_point,
@@ -86,7 +90,7 @@ def home():
                 print("Unable")
                 return render_template("error.html")
             
-
+        # storing all variables in session dictionary
         session["start-point"] = start_point
         session["end-point"] = end_point
         session["range-start"] = range_start
@@ -136,6 +140,7 @@ def home():
     return render_template("index.html")
 
 
+# Redirect to results.html and retrieve variables from session dictionary
 @app.route("/results", methods=["GET", "POST"])
 def results():
     return render_template(
@@ -174,6 +179,7 @@ def results():
     )
 
 
+# If the user chooses an option of own rest, we apply this function where we have an extra location to be processed 
 @app.route('/ownrest', methods=['GET','POST'])
 def ownrest():
     rest_point = str(request.values.get('rest'))
@@ -329,6 +335,7 @@ def ownrest():
             rest_charge_last_leg_alt = session_own_rest.get("rest_charge_last_leg_alt"),
             )
 
+# This function focuses on getting user input when there is a charging requirement between 2am and 6am
 @app.route('/userchoice', methods=['GET','POST'])
 def userchoice():
     
@@ -337,6 +344,7 @@ def userchoice():
     clicked = values[clicked]
 
     if clicked == 3:
+        # If option 3 is entered, results.html is returned
         session["night_travel"] = 'false'
         session["night_travel_alt"] = 'false'
 
@@ -378,9 +386,11 @@ def userchoice():
     )
 
     elif clicked == 2:
+        # If option 2 is entered, ask for rest place using option2.html
         return render_template("option2.html")
 
     elif clicked == 1:
+        #If option 1 is entered, process no night script using variables from session dict
         start_point = session.get("start-point")
         end_point = session.get("end-point")
         range_start = session.get("range-start")
