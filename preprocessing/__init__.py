@@ -48,13 +48,24 @@ def get_nearest_charging_stations(
     return nearest_df
 
 
+# def get_lat_long_from_coordinates(
+#     coordinates: Dict[str, object]
+# ) -> Tuple[float, float]:
+#     """Function to get latitude and longitude from the geojson object that is received from the API call"""
+#     try:
+#         lon = coordinates["features"][0]["geometry"]["coordinates"][0]
+#         lat = coordinates["features"][0]["geometry"]["coordinates"][1]
+#         return lat, lon
+#     except IndexError:
+#         return 0.0, 0.0
+
 def get_lat_long_from_coordinates(
     coordinates: Dict[str, object]
 ) -> Tuple[float, float]:
     """Function to get latitude and longitude from the geojson object that is received from the API call"""
     try:
-        lon = coordinates["features"][0]["geometry"]["coordinates"][0]
-        lat = coordinates["features"][0]["geometry"]["coordinates"][1]
+        lon = coordinates["items"][0]["position"]["lng"]
+        lat = coordinates["items"][0]["position"]["lat"]
         return lat, lon
     except IndexError:
         return 0.0, 0.0
