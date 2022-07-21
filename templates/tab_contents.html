@@ -40,32 +40,33 @@
         Remove last added point
       </button>
     </div>
-    <form method="POST" autocomplete="off">
+    <form method="POST">
       <div id="points" style="display: table; width: 100%; table-layout: fixed">
-        <input
-          id="start-point"
-          name="start-point"
-          type="search"
-          style="display: table-cell; width: 100%; padding: 2%"
-          class="form-control rounded"
-          placeholder="Add Starting Point"
-          aria-label="Search"
-          aria-describedby="search-addon"
-        />
-        <br />
-        <br />
+        <div id="start-point-container" class="autocomplete-container">
+          <!--<input
+            id="start-point"
+            name="start-point"
+            type="search"
+            style="display: table-cell; width: 100%; padding: 2%"
+            class="form-control rounded location-points"
+            placeholder="Add Starting Point"
+            aria-label="Search"
+            aria-describedby="search-addon"
+          />-->
+        </div>
         <div id="intermediate"></div>
-        <br />
-        <input
-          id="end-point"
-          name="end-point"
-          type="search"
-          class="form-control rounded"
-          placeholder="Add Destination"
-          aria-label="Search"
-          style="display: table-cell; width: 100%; padding: 2%"
-          aria-describedby="search-addon"
-        />
+        <div id="end-container" class="autocomplete-container">
+          <!--<input
+            id="end-point"
+            name="end-point"
+            type="search"
+            class="form-control rounded location-points"
+            placeholder="Add Destination"
+            aria-label="Search"
+            style="display: table-cell; width: 100%; padding: 2%"
+            aria-describedby="search-addon"
+          />-->
+        </div>
       </div>
       <input type="hidden" value="1" id="total_chq" />
 
@@ -92,17 +93,16 @@
       <br />
 
       <input
-      id="poi-radius"
-      name="poi-radius"
-      type="number"
-      class="form-control rounded"
-      placeholder="POI Radius in Metres"
-      aria-label="poi-radius"
-      aria-describedby="poi-radius-addon"
-    />
-    <br />
-
-        <input
+        id="poi-radius"
+        name="poi-radius"
+        type="number"
+        class="form-control rounded"
+        placeholder="POI Radius in Metres"
+        aria-label="poi-radius"
+        aria-describedby="poi-radius-addon"
+      />
+      <br />
+      <input
         id="range-ev"
         name="range-ev"
         type="number"
