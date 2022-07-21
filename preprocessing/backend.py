@@ -13,6 +13,8 @@ def get_coordinates(location):
 
     return data
 
+
+
 def get_address(lat, lon):
     """Getting address from coordinates to be added to marker"""
     url = "https://api.geoapify.com/v1/geocode/reverse"
@@ -30,6 +32,8 @@ def get_address(lat, lon):
 
     return address
     
+
+
 
 def get_POI(lat, lon, radius):
     """Getting Points of Interest when specified latitude, longitude and radius"""
@@ -59,6 +63,8 @@ def get_POI(lat, lon, radius):
 
     df = pd.DataFrame(POI, columns = ["Name","Category","Latitude", "Longitude"])
     return df
+
+
 
 
 def get_Hotel(lat, lon):
